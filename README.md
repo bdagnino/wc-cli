@@ -103,16 +103,45 @@ wcup live --watch
 | `--json` | Machine-readable output for scripting |
 | `--no-color` | Disable colors (also respects `NO_COLOR`) |
 
-## Use with Claude Code / AI agents
+## Use with an AI agent
 
-This repo ships a [Claude Code](https://claude.com/claude-code) skill so an agent
-can answer World Cup questions by running `wcup` for you — ask *"when does
-Argentina play next?"* and it runs the right command and reads back the answer.
+Ask your coding agent *"when does Argentina play next?"* and have it answer by
+running `wcup` for you.
 
-The skill lives at [`.claude/skills/world-cup/SKILL.md`](.claude/skills/world-cup/SKILL.md).
-It is picked up automatically when an agent runs inside a clone of this repo. To
-use it anywhere (e.g. alongside a `brew`/`go install`ed `wcup`), copy it into
-your user skills directory:
+### Let the agent set it all up (copy-paste)
+
+Paste the block below into a [Claude Code](https://claude.com/claude-code) or
+[Codex](https://openai.com/codex/) session. The agent installs the CLI, wires
+itself up, and is ready to answer World Cup questions:
+
+```text
+Set yourself up to answer my 2026 World Cup questions using the "wcup" CLI
+(https://github.com/bdagnino/wc-cli):
+
+1. Install it. If `go` is on PATH, run:
+     go install github.com/bdagnino/wc-cli/cmd/wcup@latest
+   Otherwise download the binary matching my OS/arch from
+   https://github.com/bdagnino/wc-cli/releases, unpack it, and move `wcup` onto
+   my PATH. Confirm `wcup --version` runs.
+
+2. If you are Claude Code, install the skill so it persists across sessions:
+     mkdir -p ~/.claude/skills/world-cup
+     curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/.claude/skills/world-cup/SKILL.md -o ~/.claude/skills/world-cup/SKILL.md
+
+3. Run `wcup today` to verify, and show me the output.
+
+From now on, when I ask about the World Cup — scores, schedule, a team's next
+game, standings, bracket, match detail — answer by running `wcup` with `--json`
+and summarizing. Use `--tz <my timezone>` so kickoff times are local to me.
+Run `wcup --help` or `wcup teams` if you need the available commands or team codes.
+```
+
+### Manual skill install
+
+This repo ships a Claude Code skill at
+[`.claude/skills/world-cup/SKILL.md`](.claude/skills/world-cup/SKILL.md). It is
+picked up automatically when an agent runs inside a clone of this repo; to use it
+anywhere, copy it into your user skills directory:
 
 ```sh
 mkdir -p ~/.claude/skills/world-cup
