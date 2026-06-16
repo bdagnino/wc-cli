@@ -7,8 +7,8 @@ standings, and teams. No account, no API key, no browser.
   <img src="docs/screenshot-today.svg" alt="wcup today" width="640">
 </p>
 
-Data comes straight from ESPN's public soccer API — completely free and
-unauthenticated.
+Data comes straight from the same public ESPN soccer endpoints your browser
+hits when you open a match page — no API key or account required.
 
 The command is `wcup` (the repo is `wc-cli`).
 
@@ -173,9 +173,16 @@ curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/AGENTS.md \
 
 ## How it works
 
-`wcup` reads ESPN's public, unauthenticated soccer endpoints. The data source
-sits behind a small `Provider` interface, so additional backends could be added
-without touching the command layer.
+`wcup` makes read-only HTTPS requests to the public ESPN soccer endpoints — the
+same ones that power espn.com's scoreboards. "No API key" simply means ESPN
+serves this data without requiring a login; `wcup` sends nothing about you, just
+fetches scores and prints them. There are no credentials to store and nothing
+runs but a JSON fetch.
+
+These are unofficial, undocumented endpoints, so the usual caveat for any
+third-party data source applies: ESPN could change or rate-limit them at any
+time. The data source sits behind a small `Provider` interface, so additional
+backends could be added without touching the command layer.
 
 ## Development
 
