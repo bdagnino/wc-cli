@@ -1,0 +1,47 @@
+# GoReleaser config. Build & publish with: git tag v0.1.0 && git push --tags
+# (CI runs `goreleaser release`). See https://goreleaser.com
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: wcup
+    main: .
+    binary: wcup
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude: ["^docs:", "^test:", "^chore:"]
+
+# Publishes a formula to github.com/bdagnino/homebrew-tap so users can run
+# `brew install bdagnino/tap/wcup`. Requires a HOMEBREW_TAP_GITHUB_TOKEN secret.
+brews:
+  - name: wcup
+    repository:
+      owner: bdagnino
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/bdagnino/wcup"
+    description: "Follow the 2026 World Cup from your terminal"
+    license: "MIT"
+    test: |
+      system "#{bin}/wcup", "--help"
