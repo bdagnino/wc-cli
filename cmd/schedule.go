@@ -20,7 +20,7 @@ var scheduleCmd = &cobra.Command{
 			return err
 		}
 		matches := scheduleOpts.apply(all, loc)
-		if done, err := emitJSON(matches); done || err != nil {
+		if done, err := emitJSON(localize(matches, loc)); done || err != nil {
 			return err
 		}
 		fmt.Print(ui.MatchListByDay("Schedule", matches, loc))

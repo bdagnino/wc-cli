@@ -99,7 +99,7 @@ wcup live --watch
 
 | Flag | Effect |
 | --- | --- |
-| `--tz <zone>` | Show kickoff times in a timezone (e.g. `Europe/Madrid`); defaults to local |
+| `--tz <zone>` | Show kickoff times in a timezone (e.g. `Europe/Madrid`); applies to JSON too; defaults to local |
 | `--json` | Machine-readable output for scripting |
 | `--no-color` | Disable colors (also respects `NO_COLOR`) |
 

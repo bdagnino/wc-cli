@@ -19,7 +19,7 @@ var todayCmd = &cobra.Command{
 			if err != nil {
 				return "", err
 			}
-			if done, err := emitJSON(matches); done || err != nil {
+			if done, err := emitJSON(localize(matches, loc)); done || err != nil {
 				return "", err
 			}
 			title := "Today · " + time.Now().In(loc).Format("Mon, Jan 2")

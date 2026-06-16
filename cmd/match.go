@@ -46,6 +46,7 @@ var matchCmd = &cobra.Command{
 		detail.Match = *chosen
 
 		if flagJSON {
+			detail.Kick = detail.Kick.In(loc)
 			_, err := emitJSON(detail)
 			return err
 		}

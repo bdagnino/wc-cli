@@ -24,7 +24,7 @@ var resultsCmd = &cobra.Command{
 		// Most recent first.
 		reverse(finished)
 		matches := resultsOpts.apply(finished, loc)
-		if done, err := emitJSON(matches); done || err != nil {
+		if done, err := emitJSON(localize(matches, loc)); done || err != nil {
 			return err
 		}
 		fmt.Print(ui.MatchListByDay("Results", matches, loc))

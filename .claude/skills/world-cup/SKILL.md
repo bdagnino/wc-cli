@@ -20,10 +20,24 @@ Run the first of these that works:
 If none work, tell the user to install it (`brew install bdagnino/tap/wcup`)
 and stop.
 
+## Timezones — read the offset, never do UTC math
+
+Kickoff times in the JSON `Kick` field are emitted **in the resolved timezone**,
+as RFC3339 **with the local offset** (e.g. `2026-06-17T03:00:00+02:00`), not as
+bare UTC. So report the date and clock time straight from `Kick` — do **not**
+mentally add or subtract hours from a `...Z` value. That hand-conversion is the
+#1 source of wrong answers here.
+
+- By default the zone is the machine's local zone. To be sure which that is,
+  check it once (`date +%Z%z` or `readlink /etc/localtime`) and tell the user.
+- If the user implies a different location, pass `--tz <zone>` (e.g.
+  `--tz America/New_York`); the `Kick` offset then reflects that zone.
+- Always state which timezone your answer is in.
+
 ## Mapping questions to commands
 
-All commands accept `--json`. Times default to the machine's local timezone;
-pass `--tz <zone>` (e.g. `--tz Europe/Madrid`) if the user implies a location.
+All commands accept `--json`. Pass `--tz <zone>` when the user implies a
+location; otherwise times come back in the machine's local zone.
 
 | The user asks… | Run |
 | --- | --- |
@@ -47,11 +61,10 @@ returns nothing, run `wcup teams --json` to find the right name/code.
 
 ## Answering well
 
-- Lead with the direct answer ("Argentina play Algeria on Tue Jun 16, 21:00 your
-  time"), then any useful context (venue, group, current score).
+- Lead with the direct answer ("Argentina play Algeria on Wed Jun 17, 03:00
+  Madrid time"), then any useful context (venue, group, current score).
 - For "next game" questions, `next --team X` returns the single upcoming match;
-  read its `Kick` (kickoff, RFC3339 UTC), `Home`/`Away`, `Venue`, `Group`.
+  read its `Kick` (kickoff, already in the resolved zone — see Timezones above),
+  `Home`/`Away`, `Venue`, `Group`.
 - For live questions, report the score and the `Clock`/`Detail` fields.
-- Convert kickoff times to the user's timezone when you know it (`--tz`), and say
-  which timezone you used.
 - If a command returns an empty list, say so plainly (e.g. "no matches today").

@@ -65,7 +65,7 @@ func Execute(version string) {
 func init() {
 	rootCmd.PersistentFlags().BoolVar(&flagJSON, "json", false, "output raw JSON for scripting")
 	rootCmd.PersistentFlags().BoolVar(&flagNoColor, "no-color", false, "disable colored output")
-	rootCmd.PersistentFlags().StringVar(&flagTZ, "tz", "", "timezone for kickoff times (e.g. Europe/Madrid); defaults to local")
+	rootCmd.PersistentFlags().StringVar(&flagTZ, "tz", "", "timezone for kickoff times, incl. JSON (e.g. Europe/Madrid); defaults to local")
 }
 
 // setup resolves shared dependencies once color/flags are known.
@@ -93,6 +93,20 @@ func emitJSON(v any) (bool, error) {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return true, enc.Encode(v)
+}
+
+// localize returns a copy of ms with kickoff times expressed in loc. ESPN
+// timestamps are UTC, so without this the JSON "Kick" field always serializes
+// with a "Z" suffix and a consumer has to convert it by hand. Expressing it in
+// loc (the --tz zone, or the machine's local zone by default) makes the JSON
+// carry the right offset (e.g. "+02:00") and match the human-readable output.
+func localize(ms []provider.Match, loc *time.Location) []provider.Match {
+	out := make([]provider.Match, len(ms))
+	for i, m := range ms {
+		m.Kick = m.Kick.In(loc)
+		out[i] = m
+	}
+	return out
 }
 
 func filterState(ms []provider.Match, st provider.MatchState) []provider.Match {

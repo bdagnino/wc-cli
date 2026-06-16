@@ -37,7 +37,7 @@ var teamCmd = &cobra.Command{
 			}
 		}
 
-		if done, err := emitJSON(map[string]any{"team": team, "matches": theirs}); done || err != nil {
+		if done, err := emitJSON(map[string]any{"team": team, "matches": localize(theirs, loc)}); done || err != nil {
 			return err
 		}
 

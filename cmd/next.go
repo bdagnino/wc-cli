@@ -24,7 +24,7 @@ var nextCmd = &cobra.Command{
 		f := filterOpts{team: nextTeam, limit: nextLimit}
 		future := upcoming(all, loc, 0) // all future scheduled matches
 		matches := f.apply(future, loc)
-		if done, err := emitJSON(matches); done || err != nil {
+		if done, err := emitJSON(localize(matches, loc)); done || err != nil {
 			return err
 		}
 		title := "Next up"

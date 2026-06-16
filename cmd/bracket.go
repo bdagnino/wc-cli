@@ -26,7 +26,7 @@ var bracketCmd = &cobra.Command{
 				ko = append(ko, m)
 			}
 		}
-		if done, err := emitJSON(ko); done || err != nil {
+		if done, err := emitJSON(localize(ko, loc)); done || err != nil {
 			return err
 		}
 		if len(ko) == 0 {

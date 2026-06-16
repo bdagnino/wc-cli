@@ -21,7 +21,7 @@ var liveCmd = &cobra.Command{
 				return "", err
 			}
 			live := filterState(matches, provider.StateLive)
-			if done, err := emitJSON(live); done || err != nil {
+			if done, err := emitJSON(localize(live, loc)); done || err != nil {
 				return "", err
 			}
 			return ui.MatchList("● Live now", live, loc), nil
