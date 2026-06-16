@@ -28,6 +28,8 @@ Grab a prebuilt binary for your platform from the
 
 ### Homebrew (macOS / Linux)
 
+> Enabled once the maintainer publishes the formula (see [Releasing](#releasing)).
+
 ```sh
 brew install bdagnino/tap/wcup
 ```
@@ -134,6 +136,28 @@ go test ./...                     # test
 ```
 
 Requires Go 1.23+.
+
+## Releasing
+
+Tagging a version triggers GitHub Actions + GoReleaser, which publishes
+cross-platform binaries and a GitHub Release:
+
+```sh
+git tag -a v0.1.2 -m "wcup v0.1.2" && git push origin v0.1.2
+```
+
+**Homebrew (one-time setup).** The release also publishes a formula to
+`bdagnino/homebrew-tap`, but only if a token is configured — otherwise that step
+is skipped and binary releases still succeed. To enable it, create a
+fine-grained personal access token with **Contents: read & write** on the
+`homebrew-tap` repo, then:
+
+```sh
+gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo bdagnino/wc-cli   # paste the token
+gh run rerun --repo bdagnino/wc-cli $(gh run list --workflow=release.yml -L1 --json databaseId --jq '.[0].databaseId')
+```
+
+After that, `brew install bdagnino/tap/wcup` works.
 
 ## License
 
