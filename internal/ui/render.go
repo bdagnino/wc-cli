@@ -16,8 +16,8 @@ import (
 const nameW = 18
 
 var (
-	homeCell = lipgloss.NewStyle().Width(nameW).MaxWidth(nameW).Inline(true).Align(lipgloss.Right)
-	awayCell = lipgloss.NewStyle().Width(nameW).MaxWidth(nameW).Inline(true).Align(lipgloss.Left)
+	homeCell = lipgloss.NewStyle().Width(nameW).MaxWidth(nameW).Inline(true).Align(lipgloss.Right).Foreground(cWhite)
+	awayCell = lipgloss.NewStyle().Width(nameW).MaxWidth(nameW).Inline(true).Align(lipgloss.Left).Foreground(cWhite)
 )
 
 // Match renders a single match as one aligned line. anchor is the day the list
@@ -39,7 +39,8 @@ func Match(m provider.Match, loc *time.Location, anchor time.Time) string {
 		kick := m.Kick.In(loc)
 		status = Upcoming.Render(kick.Format("15:04"))
 		if d := dayDelta(anchor, kick, loc); d != 0 {
-			status += Faint.Render(fmt.Sprintf(" %+d", d))
+			// Same yellow as the time so the marker reads as part of it.
+			status += Upcoming.Render(fmt.Sprintf(" %+d", d))
 		}
 	}
 

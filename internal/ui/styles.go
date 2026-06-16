@@ -8,11 +8,14 @@ import (
 )
 
 // Palette. Kept small and semantic so the whole CLI reads consistently.
+// The grays are deliberately on the light side of the 256-color ramp: 240
+// (#585858) is too dark to read on most terminal backgrounds, so secondary
+// text uses 250 and the faintest tier uses 245.
 var (
 	cGreen  = lipgloss.Color("42")
 	cYellow = lipgloss.Color("220")
-	cGray   = lipgloss.Color("245")
-	cFaint  = lipgloss.Color("240")
+	cGray   = lipgloss.Color("250")
+	cFaint  = lipgloss.Color("245")
 	cWhite  = lipgloss.Color("255")
 	cAccent = lipgloss.Color("39")
 )
@@ -32,11 +35,19 @@ var (
 // NO_COLOR convention, auto-disables when output is not a terminal, and honors
 // CLICOLOR_FORCE to keep color on when piped (e.g. capturing screenshots).
 func SetColor(enabled bool) {
-	if enabled {
-		lipgloss.SetColorProfile(termenv.EnvColorProfile())
-	} else {
+	if !enabled {
 		lipgloss.SetColorProfile(termenv.Ascii)
+		return
 	}
+	// When color is explicitly forced on for a non-TTY (e.g. piping into freeze
+	// to capture screenshots), EnvColorProfile downgrades to 16-color ANSI,
+	// which mangles the 256-color palette. Force full truecolor so piped output
+	// keeps the real colors.
+	if _, forced := os.LookupEnv("CLICOLOR_FORCE"); forced {
+		lipgloss.SetColorProfile(termenv.TrueColor)
+		return
+	}
+	lipgloss.SetColorProfile(termenv.EnvColorProfile())
 }
 
 // ColorEnabled resolves whether color should be on given the flag.
