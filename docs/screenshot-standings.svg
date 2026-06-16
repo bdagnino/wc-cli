@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg width="440.00" height="184.00" xmlns="http://www.w3.org/2000/svg">
+<svg width="460.00" height="218.00" xmlns="http://www.w3.org/2000/svg">
 <style>
 @font-face {
 	font-family: &apos;JetBrains Mono&apos;;
@@ -8,8 +8,8 @@
 	font-weight: normal;
 	font-style: normal;
 }
-</style><rect width="440.00" height="184.00" fill="#0d1117" rx="8.00" ry="8.00" x="0.00px" y="0.00px"/>
+</style><rect width="460.00" height="218.00" fill="#0d1117" rx="8.00" ry="8.00" x="0.00px" y="0.00px"/>
 <g font-family="JetBrains Mono" font-size="14.00px" fill="#c4c4c4" clip-path="url(#terminalMask)">
-<text x="20.00px" y="51.80px" xml:space="preserve"><tspan xml:space="preserve" fill="#00afff">Group A</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="68.60px" xml:space="preserve"><tspan xml:space="preserve" fill="#585858">                       P   W   D   L   GD  Pts</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="85.40px" xml:space="preserve"><tspan xml:space="preserve">  </tspan><tspan xml:space="preserve" fill="#00d787">🇲🇽 Mexico             1   1   0   0   +2    3</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="102.20px" xml:space="preserve"><tspan xml:space="preserve">  </tspan><tspan xml:space="preserve" fill="#00d787">🇰🇷 South Korea        1   1   0   0   +1    3</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="119.00px" xml:space="preserve"><tspan xml:space="preserve">  </tspan><tspan xml:space="preserve" fill="#8a8a8a">🇨🇿 Czechia            1   0   0   1   -1    0</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="135.80px" xml:space="preserve"><tspan xml:space="preserve">  </tspan><tspan xml:space="preserve" fill="#8a8a8a">🇿🇦 South Africa       1   0   0   1   -2    0</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="152.60px" xml:space="preserve"/>
+<text x="20.00px" y="51.80px" xml:space="preserve"><tspan xml:space="preserve" fill="#767676">❯ </tspan><tspan xml:space="preserve">wcup standings --group A</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="68.60px" xml:space="preserve"/><text x="20.00px" y="85.40px" xml:space="preserve"><tspan xml:space="preserve" fill="#8F69FF">Group A</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="102.20px" xml:space="preserve"><tspan xml:space="preserve" fill="#4B4B4B">                       P   W   D   L   GD  Pts</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="119.00px" xml:space="preserve"><tspan xml:space="preserve">  </tspan><tspan xml:space="preserve" fill="#00D787">🇲🇽 Mexico             1   1   0   0   +2    3</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="135.80px" xml:space="preserve"><tspan xml:space="preserve">  </tspan><tspan xml:space="preserve" fill="#00D787">🇰🇷 South Korea        1   1   0   0   +1    3</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="152.60px" xml:space="preserve"><tspan xml:space="preserve">  </tspan><tspan xml:space="preserve" fill="#4B4B4B">🇨🇿 Czechia            1   0   0   1   -1    0</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="169.40px" xml:space="preserve"><tspan xml:space="preserve">  </tspan><tspan xml:space="preserve" fill="#4B4B4B">🇿🇦 South Africa       1   0   0   1   -2    0</tspan><tspan xml:space="preserve"/></text><text x="20.00px" y="186.20px" xml:space="preserve"/>
 </g>
 <svg x="0.00px" y="0.00px"><circle cx="13.50" cy="12.00" r="5.50" fill="#FF5A54"/><circle cx="32.50" cy="12.00" r="5.50" fill="#E6BF29"/><circle cx="51.50" cy="12.00" r="5.50" fill="#52C12B"/></svg></svg>

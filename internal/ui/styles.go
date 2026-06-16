@@ -29,10 +29,11 @@ var (
 )
 
 // SetColor enables or disables all styling. It honors --no-color and the
-// NO_COLOR convention, and auto-disables when output is not a terminal.
+// NO_COLOR convention, auto-disables when output is not a terminal, and honors
+// CLICOLOR_FORCE to keep color on when piped (e.g. capturing screenshots).
 func SetColor(enabled bool) {
 	if enabled {
-		lipgloss.SetColorProfile(termenv.ColorProfile())
+		lipgloss.SetColorProfile(termenv.EnvColorProfile())
 	} else {
 		lipgloss.SetColorProfile(termenv.Ascii)
 	}

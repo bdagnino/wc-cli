@@ -166,6 +166,11 @@ go test ./...                     # test
 
 Requires Go 1.23+.
 
+The README screenshots are generated from live output by
+[`scripts/screenshots.sh`](scripts/screenshots.sh) (needs
+[`freeze`](https://github.com/charmbracelet/freeze)). Color is forced on when
+piped via `CLICOLOR_FORCE=1`.
+
 ## Releasing
 
 Tagging a version triggers GitHub Actions + GoReleaser, which publishes
