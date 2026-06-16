@@ -53,6 +53,11 @@ Run `wcup` with no arguments for a smart summary — what's **live now**, else
 | `wcup team <name>` | A team's fixtures, results, and group |
 | `wcup teams` | List all teams (or search for one) |
 
+Kickoff times are shown in your local zone. Matches are grouped by their
+official match day (matching broadcasters), so a late kickoff can land in the
+small hours of the *next* calendar day — those times carry a flight-style `+1`
+marker (e.g. `03:00 +1` means 3am tomorrow). Use `--tz` to see another zone.
+
 ### Match detail
 
 `wcup match <id|team>` shows the scoreline plus a goal/card/substitution

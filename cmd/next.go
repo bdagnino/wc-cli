@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bdagnino/wc-cli/internal/ui"
 	"github.com/spf13/cobra"
@@ -31,7 +32,7 @@ var nextCmd = &cobra.Command{
 		if nextTeam != "" {
 			title = "Next up · " + nextTeam
 		}
-		fmt.Print(ui.MatchList(title, matches, loc))
+		fmt.Print(ui.MatchList(title, matches, loc, time.Now().In(loc)))
 		return nil
 	},
 }

@@ -24,7 +24,7 @@ var liveCmd = &cobra.Command{
 			if done, err := emitJSON(localize(live, loc)); done || err != nil {
 				return "", err
 			}
-			return ui.MatchList("● Live now", live, loc), nil
+			return ui.MatchList("● Live now", live, loc, time.Time{}), nil
 		})
 	},
 }

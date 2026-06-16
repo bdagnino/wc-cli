@@ -29,17 +29,18 @@ var rootCmd = &cobra.Command{
 	// Bare `wcup`: a smart summary — live now, else today, else next up.
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx, p, loc := setup()
-		today, err := p.Scoreboard(ctx, time.Now().In(loc))
+		now := time.Now().In(loc)
+		today, err := p.Scoreboard(ctx, now)
 		if err != nil {
 			return err
 		}
 		live := filterState(today, provider.StateLive)
 		if len(live) > 0 {
-			fmt.Print(ui.MatchList("● Live now", live, loc))
+			fmt.Print(ui.MatchList("● Live now", live, loc, time.Time{}))
 			return nil
 		}
 		if len(today) > 0 {
-			fmt.Print(ui.MatchList("Today", today, loc))
+			fmt.Print(ui.MatchList("Today", today, loc, now))
 			return nil
 		}
 		// Nothing today: show the next upcoming matches.
@@ -48,7 +49,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		next := upcoming(sched, loc, 5)
-		fmt.Print(ui.MatchList("Next up", next, loc))
+		fmt.Print(ui.MatchList("Next up", next, loc, now))
 		return nil
 	},
 }

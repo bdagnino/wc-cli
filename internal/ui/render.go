@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -19,8 +20,11 @@ var (
 	awayCell = lipgloss.NewStyle().Width(nameW).MaxWidth(nameW).Inline(true).Align(lipgloss.Left)
 )
 
-// Match renders a single match as one aligned line.
-func Match(m provider.Match, loc *time.Location) string {
+// Match renders a single match as one aligned line. anchor is the day the list
+// is "about" (e.g. today): when a scheduled kickoff's local clock time falls on
+// a different calendar day, the time gets a flight-style "+1" / "-1" marker.
+// Pass the zero time to suppress the marker (e.g. in day-grouped lists).
+func Match(m provider.Match, loc *time.Location, anchor time.Time) string {
 	var status string
 	switch m.State {
 	case provider.StateLive:
@@ -32,7 +36,11 @@ func Match(m provider.Match, loc *time.Location) string {
 	case provider.StateFinished:
 		status = Muted.Render("FT")
 	default:
-		status = Upcoming.Render(m.Kick.In(loc).Format("15:04"))
+		kick := m.Kick.In(loc)
+		status = Upcoming.Render(kick.Format("15:04"))
+		if d := dayDelta(anchor, kick, loc); d != 0 {
+			status += Faint.Render(fmt.Sprintf(" %+d", d))
+		}
 	}
 
 	home := homeCell.Render(m.Home.Name)
@@ -71,6 +79,24 @@ func Match(m provider.Match, loc *time.Location) string {
 	)
 }
 
+// dayDelta reports how many calendar days kick lands after anchor, both read in
+// loc. It is 0 when anchor is unset or the two share a day. This lets a flat
+// list (which prints only a clock time, no date) flag a kickoff whose local
+// time has rolled past midnight — e.g. a match ESPN buckets under "today" by US
+// date but that actually starts 03:00 the next morning here — with a "+1".
+func dayDelta(anchor, kick time.Time, loc *time.Location) int {
+	if anchor.IsZero() {
+		return 0
+	}
+	midnight := func(t time.Time) time.Time {
+		t = t.In(loc)
+		y, mo, d := t.Date()
+		return time.Date(y, mo, d, 0, 0, 0, 0, loc)
+	}
+	// Round to absorb DST days that are 23 or 25 hours long.
+	return int(math.Round(midnight(kick).Sub(midnight(anchor)).Hours() / 24))
+}
+
 // statusPad keeps the status column visually aligned across styled strings,
 // where the rendered width differs from the byte length.
 func statusPad(s string) string {
@@ -82,8 +108,10 @@ func statusPad(s string) string {
 	return s + strings.Repeat(" ", pad)
 }
 
-// MatchList renders a titled block of matches grouped under a heading.
-func MatchList(title string, matches []provider.Match, loc *time.Location) string {
+// MatchList renders a titled block of matches grouped under a heading. anchor
+// is the day the list is about (e.g. today); kickoffs on another calendar day
+// get a "+1"-style marker. Pass the zero time to suppress it.
+func MatchList(title string, matches []provider.Match, loc *time.Location, anchor time.Time) string {
 	var b strings.Builder
 	if title != "" {
 		b.WriteString(Title.Render(title) + "\n")
@@ -93,7 +121,7 @@ func MatchList(title string, matches []provider.Match, loc *time.Location) strin
 		return b.String()
 	}
 	for _, m := range matches {
-		b.WriteString("  " + Match(m, loc) + "\n")
+		b.WriteString("  " + Match(m, loc, anchor) + "\n")
 	}
 	return b.String()
 }
@@ -115,7 +143,8 @@ func MatchListByDay(title string, matches []provider.Match, loc *time.Location) 
 			b.WriteString("\n" + Header.Render(day) + "\n")
 			lastDay = day
 		}
-		b.WriteString("  " + Match(m, loc) + "\n")
+		// Day headers already disambiguate the date, so no per-row marker.
+		b.WriteString("  " + Match(m, loc, time.Time{}) + "\n")
 	}
 	return b.String()
 }

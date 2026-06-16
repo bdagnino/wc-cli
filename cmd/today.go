@@ -22,8 +22,9 @@ var todayCmd = &cobra.Command{
 			if done, err := emitJSON(localize(matches, loc)); done || err != nil {
 				return "", err
 			}
-			title := "Today · " + time.Now().In(loc).Format("Mon, Jan 2")
-			return ui.MatchList(title, matches, loc), nil
+			now := time.Now().In(loc)
+			title := "Today · " + now.Format("Mon, Jan 2")
+			return ui.MatchList(title, matches, loc, now), nil
 		})
 	},
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/bdagnino/wc-cli/internal/provider"
 	"github.com/bdagnino/wc-cli/internal/ui"
@@ -50,7 +51,9 @@ var bracketCmd = &cobra.Command{
 				}
 			}
 			if len(rms) > 0 {
-				fmt.Print(ui.MatchList(r.title, rms, loc))
+				// Knockout dates are far out; the round title carries the
+				// timing, so no day marker (zero anchor).
+				fmt.Print(ui.MatchList(r.title, rms, loc, time.Time{}))
 				fmt.Println()
 			}
 		}
