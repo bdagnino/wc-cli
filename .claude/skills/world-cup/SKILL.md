@@ -15,7 +15,7 @@ Run the first of these that works:
 
 1. `wcup` — if installed (Homebrew / `go install`), it is on `PATH`.
 2. `./bin/wcup` — when working inside this repository.
-3. `go run .` — from the repo root as a last resort.
+3. `go run ./cmd/wcup` — from the repo root as a last resort.
 
 If none work, tell the user to install it (`brew install bdagnino/tap/wcup`)
 and stop.

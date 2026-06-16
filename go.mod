@@ -1,4 +1,4 @@
-module github.com/bdagnino/wcup
+module github.com/bdagnino/wc-cli
 
 go 1.23.6
 

@@ -2,13 +2,18 @@
 # (CI runs `goreleaser release`). See https://goreleaser.com
 version: 2
 
+# Ensure the brew token key always exists (empty when the secret is unset), so
+# the templated skip_upload below never errors on a missing env entry.
+env:
+  - HOMEBREW_TAP_GITHUB_TOKEN={{ if index .Env "HOMEBREW_TAP_GITHUB_TOKEN" }}{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}{{ end }}
+
 before:
   hooks:
     - go mod tidy
 
 builds:
   - id: wcup
-    main: .
+    main: ./cmd/wcup
     binary: wcup
     env:
       - CGO_ENABLED=0
@@ -33,14 +38,17 @@ changelog:
     exclude: ["^docs:", "^test:", "^chore:"]
 
 # Publishes a formula to github.com/bdagnino/homebrew-tap so users can run
-# `brew install bdagnino/tap/wcup`. Requires a HOMEBREW_TAP_GITHUB_TOKEN secret.
+# `brew install bdagnino/tap/wcup`. The publish is skipped automatically unless
+# a HOMEBREW_TAP_GITHUB_TOKEN secret is present, so binary releases work without
+# it; add the token to enable Homebrew.
 brews:
   - name: wcup
+    skip_upload: '{{ if .Env.HOMEBREW_TAP_GITHUB_TOKEN }}false{{ else }}true{{ end }}'
     repository:
       owner: bdagnino
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    homepage: "https://github.com/bdagnino/wcup"
+    homepage: "https://github.com/bdagnino/wc-cli"
     description: "Follow the 2026 World Cup from your terminal"
     license: "MIT"
     test: |

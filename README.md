@@ -10,24 +10,27 @@ standings, and teams. No account, no API key, no browser.
 Data comes straight from ESPN's public soccer API — completely free and
 unauthenticated.
 
+The command is `wcup` (the repo is `wc-cli`).
+
 ## Install
+
+### Go (any platform)
+
+```sh
+go install github.com/bdagnino/wc-cli/cmd/wcup@latest
+```
+
+### Binaries
+
+Grab a prebuilt binary for your platform from the
+[releases page](https://github.com/bdagnino/wc-cli/releases), unpack it, and put
+`wcup` on your `PATH`.
 
 ### Homebrew (macOS / Linux)
 
 ```sh
 brew install bdagnino/tap/wcup
 ```
-
-### Go
-
-```sh
-go install github.com/bdagnino/wcup@latest
-```
-
-### Binaries
-
-Grab a prebuilt binary for your platform from the
-[releases page](https://github.com/bdagnino/wcup/releases).
 
 ## Usage
 
@@ -98,6 +101,23 @@ wcup live --watch
 | `--json` | Machine-readable output for scripting |
 | `--no-color` | Disable colors (also respects `NO_COLOR`) |
 
+## Use with Claude Code / AI agents
+
+This repo ships a [Claude Code](https://claude.com/claude-code) skill so an agent
+can answer World Cup questions by running `wcup` for you — ask *"when does
+Argentina play next?"* and it runs the right command and reads back the answer.
+
+The skill lives at [`.claude/skills/world-cup/SKILL.md`](.claude/skills/world-cup/SKILL.md).
+It is picked up automatically when an agent runs inside a clone of this repo. To
+use it anywhere (e.g. alongside a `brew`/`go install`ed `wcup`), copy it into
+your user skills directory:
+
+```sh
+mkdir -p ~/.claude/skills/world-cup
+curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/.claude/skills/world-cup/SKILL.md \
+  -o ~/.claude/skills/world-cup/SKILL.md
+```
+
 ## How it works
 
 `wcup` reads ESPN's public, unauthenticated soccer endpoints. The data source
@@ -107,9 +127,10 @@ without touching the command layer.
 ## Development
 
 ```sh
-go build -o bin/wcup .   # build
-go vet ./...             # lint
-./bin/wcup today         # run
+go build -o bin/wcup ./cmd/wcup   # build
+go vet ./...                      # lint
+go test ./...                     # test
+./bin/wcup today                  # run
 ```
 
 Requires Go 1.23+.

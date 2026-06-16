@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bdagnino/wcup/internal/provider"
+	"github.com/bdagnino/wc-cli/internal/provider"
 )
 
 // newTestClient spins an in-process server that serves canned ESPN payloads,

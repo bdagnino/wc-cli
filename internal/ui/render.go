@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bdagnino/wcup/internal/provider"
+	"github.com/bdagnino/wc-cli/internal/provider"
 	"github.com/charmbracelet/lipgloss"
 )
 

@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/bdagnino/wcup/internal/ui"
+	"github.com/bdagnino/wc-cli/internal/ui"
 )
 
 const watchInterval = 30 * time.Second

@@ -3,7 +3,7 @@ package cmd
 import (
 	"time"
 
-	"github.com/bdagnino/wcup/internal/ui"
+	"github.com/bdagnino/wc-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
 

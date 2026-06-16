@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bdagnino/wcup/internal/provider"
-	"github.com/bdagnino/wcup/internal/ui"
+	"github.com/bdagnino/wc-cli/internal/provider"
+	"github.com/bdagnino/wc-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
 

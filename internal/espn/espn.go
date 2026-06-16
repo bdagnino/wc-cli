@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bdagnino/wcup/internal/provider"
+	"github.com/bdagnino/wc-cli/internal/provider"
 )
 
 const defaultBase = "https://site.api.espn.com/apis"
