@@ -124,9 +124,14 @@ Set yourself up to answer my 2026 World Cup questions using the "wcup" CLI
    https://github.com/bdagnino/wc-cli/releases, unpack it, and move `wcup` onto
    my PATH. Confirm `wcup --version` runs.
 
-2. If you are Claude Code, install the skill so it persists across sessions:
-     mkdir -p ~/.claude/skills/world-cup
-     curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/.claude/skills/world-cup/SKILL.md -o ~/.claude/skills/world-cup/SKILL.md
+2. Make it persist across sessions, depending on which agent you are:
+   - Claude Code — install the skill:
+       mkdir -p ~/.claude/skills/world-cup
+       curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/.claude/skills/world-cup/SKILL.md -o ~/.claude/skills/world-cup/SKILL.md
+   - Codex (or any AGENTS.md-aware agent) — append the guidance to my global
+     instructions so it loads every session:
+       mkdir -p ~/.codex
+       curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/AGENTS.md >> ~/.codex/AGENTS.md
 
 3. Run `wcup today` to verify, and show me the output.
 
@@ -136,17 +141,29 @@ and summarizing. Use `--tz <my timezone>` so kickoff times are local to me.
 Run `wcup --help` or `wcup teams` if you need the available commands or team codes.
 ```
 
-### Manual skill install
+### Manual persistent setup
 
-This repo ships a Claude Code skill at
-[`.claude/skills/world-cup/SKILL.md`](.claude/skills/world-cup/SKILL.md). It is
-picked up automatically when an agent runs inside a clone of this repo; to use it
-anywhere, copy it into your user skills directory:
+The repo ships the same guidance in two native formats, each auto-loaded when an
+agent runs inside a clone of this repo:
+
+- **Claude Code** — a skill at
+  [`.claude/skills/world-cup/SKILL.md`](.claude/skills/world-cup/SKILL.md).
+- **Codex** (and any `AGENTS.md`-aware agent) — [`AGENTS.md`](AGENTS.md) at the
+  repo root.
+
+To make it work **anywhere**, not just inside a clone, install into your user
+config:
 
 ```sh
+# Claude Code — a skill, loaded on demand by description
 mkdir -p ~/.claude/skills/world-cup
 curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/.claude/skills/world-cup/SKILL.md \
   -o ~/.claude/skills/world-cup/SKILL.md
+
+# Codex — appended to your global AGENTS.md, loaded every session
+mkdir -p ~/.codex
+curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/AGENTS.md \
+  >> ~/.codex/AGENTS.md
 ```
 
 ## How it works

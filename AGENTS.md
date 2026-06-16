@@ -1,16 +1,14 @@
----
-name: world-cup
-description: Answer questions about the 2026 FIFA World Cup — live scores, today's matches, schedule/fixtures, results, group standings, teams, match detail, and when a given team plays next — by running the `wcup` CLI. Use whenever the user asks about World Cup matches, scores, who is playing, group tables, a team's next or last game, or match details.
----
+# Agent instructions — World Cup 2026 via the `wcup` CLI
 
-# World Cup 2026 via the `wcup` CLI
+> This is the **Codex** (and any `AGENTS.md`-aware agent) twin of the Claude Code
+> skill at [`.claude/skills/world-cup/SKILL.md`](.claude/skills/world-cup/SKILL.md).
+> Both describe the same behavior; keep them in sync when you change one.
 
-> Codex twin of this skill lives at [`AGENTS.md`](../../../AGENTS.md) in the repo
-> root. Both describe the same behavior; keep them in sync when you change one.
-
-Answer the user's World Cup question by running `wcup` and reading its output.
-Always pass `--json` so you can parse reliably, then summarize the answer in
-plain language. Do not dump raw JSON at the user unless they ask for it.
+When the user asks about the **2026 FIFA World Cup** — live scores, today's
+matches, schedule/fixtures, results, group standings, teams, match detail, or
+when a given team plays next — answer by running the `wcup` CLI and reading its
+output. Always pass `--json` so you can parse reliably, then summarize in plain
+language. Don't dump raw JSON unless asked.
 
 ## Finding the binary
 
@@ -20,8 +18,8 @@ Run the first of these that works:
 2. `./bin/wcup` — when working inside this repository.
 3. `go run ./cmd/wcup` — from the repo root as a last resort.
 
-If none work, tell the user to install it (`brew install bdagnino/tap/wcup`)
-and stop.
+If none work, tell the user to install it (`brew install bdagnino/tap/wcup`, or
+`go install github.com/bdagnino/wc-cli/cmd/wcup@latest`) and stop.
 
 ## Timezones — read the offset, never do UTC math
 
