@@ -62,6 +62,17 @@ marker (e.g. `03:00 +1` means 3am tomorrow). Use `--tz` to see another zone.
 
 `wcup match <id|team>` shows the scoreline plus a goal/card/substitution
 timeline and game info. With no argument it picks the live or featured match.
+By team it prefers a live or upcoming game; add `--last` to jump to the team's
+most recent finished match instead:
+
+```sh
+wcup match arg --last        # Argentina's most recent finished game
+wcup match --last            # most recent finished match overall
+```
+
+For a finished match it also prints a **Highlights** link — the official FIFA
+reel (`fifa.com/en/watch/…`) when it's published, falling back to a YouTube
+search that reliably surfaces it otherwise.
 
 <p align="center">
   <img src="docs/screenshot-match.svg" alt="wcup match detail" width="560">
@@ -174,15 +185,19 @@ curl -fsSL https://raw.githubusercontent.com/bdagnino/wc-cli/main/AGENTS.md \
 ## How it works
 
 `wcup` makes read-only HTTPS requests to the public ESPN soccer endpoints — the
-same ones that power espn.com's scoreboards. "No API key" simply means ESPN
-serves this data without requiring a login; `wcup` sends nothing about you, just
-fetches scores and prints them. There are no credentials to store and nothing
-runs but a JSON fetch.
+same ones that power espn.com's scoreboards — for scores, schedule, standings,
+and teams. Highlights links additionally come from the public FIFA endpoints
+fifa.com itself calls. "No API key" simply means these sites serve this data
+without requiring a login; `wcup` sends nothing about you, just fetches scores
+and prints them. There are no credentials to store and nothing runs but a JSON
+fetch.
 
 These are unofficial, undocumented endpoints, so the usual caveat for any
-third-party data source applies: ESPN could change or rate-limit them at any
-time. The data source sits behind a small `Provider` interface, so additional
-backends could be added without touching the command layer.
+third-party data source applies: ESPN or FIFA could change or rate-limit them at
+any time. Highlights are best-effort: the official FIFA reel when available,
+otherwise a YouTube search link, so the match detail never goes blank. The core
+data sits behind a small `Provider` interface, so additional backends could be
+added without touching the command layer.
 
 ## Development
 

@@ -1,14 +1,19 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
+	"github.com/bdagnino/wc-cli/internal/fifa"
 	"github.com/bdagnino/wc-cli/internal/provider"
 	"github.com/bdagnino/wc-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
+
+var matchLast bool
 
 var matchCmd = &cobra.Command{
 	Use:   "match [team]",
@@ -26,14 +31,14 @@ var matchCmd = &cobra.Command{
 			if isNumeric(query) {
 				chosen = pickByID(all, query)
 			} else {
-				chosen = pickByTeam(all, query, loc)
+				chosen = pickByTeam(all, query, loc, matchLast)
 			}
 			if chosen == nil {
 				fmt.Println(ui.Muted.Render("No match found for \"" + query + "\"."))
 				return nil
 			}
 		} else {
-			chosen = pickFeatured(all)
+			chosen = pickFeatured(all, matchLast)
 			if chosen == nil {
 				fmt.Println(ui.Muted.Render("No matches available right now."))
 				return nil
@@ -50,7 +55,7 @@ var matchCmd = &cobra.Command{
 			_, err := emitJSON(detail)
 			return err
 		}
-		fmt.Print(renderMatchDetail(detail, loc))
+		fmt.Print(renderMatchDetail(detail, loc, matchHighlights(ctx, *chosen)))
 		if derr != nil {
 			fmt.Println(ui.Faint.Render("(timeline unavailable)"))
 		}
@@ -59,12 +64,15 @@ var matchCmd = &cobra.Command{
 }
 
 func init() {
+	matchCmd.Flags().BoolVar(&matchLast, "last", false, "show the most recent finished match (instead of live/next), e.g. wcup match arg --last")
 	rootCmd.AddCommand(matchCmd)
 }
 
 // pickByTeam returns the most relevant match for a team: a live one, else the
-// next upcoming, else the most recent finished.
-func pickByTeam(all []provider.Match, query string, loc *time.Location) *provider.Match {
+// next upcoming, else the most recent finished. When preferLast is set, the
+// most recent finished match wins (falling back to live/next only if the team
+// has none yet).
+func pickByTeam(all []provider.Match, query string, loc *time.Location, preferLast bool) *provider.Match {
 	var live, next, last *provider.Match
 	now := time.Now()
 	for i := range all {
@@ -84,6 +92,8 @@ func pickByTeam(all []provider.Match, query string, loc *time.Location) *provide
 		}
 	}
 	switch {
+	case preferLast && last != nil:
+		return last
 	case live != nil:
 		return live
 	case next != nil:
@@ -115,8 +125,18 @@ func isNumeric(s string) bool {
 }
 
 // pickFeatured returns the first live match, else the next upcoming overall.
-func pickFeatured(all []provider.Match) *provider.Match {
+// When preferLast is set, it returns the most recent finished match instead.
+func pickFeatured(all []provider.Match, preferLast bool) *provider.Match {
 	now := time.Now()
+	if preferLast {
+		// all is sorted ascending by kickoff, so the last finished entry is
+		// the most recent one played.
+		for i := len(all) - 1; i >= 0; i-- {
+			if all[i].State == provider.StateFinished {
+				return &all[i]
+			}
+		}
+	}
 	for i := range all {
 		if all[i].State == provider.StateLive {
 			return &all[i]
@@ -142,7 +162,23 @@ func stageLabel(m provider.Match) string {
 	return m.Round
 }
 
-func renderMatchDetail(d provider.MatchDetail, loc *time.Location) string {
+// matchHighlights resolves a highlights link for a finished match: the
+// official FIFA reel when it's published, otherwise a YouTube search that
+// reliably surfaces it. Best-effort — a slow or failing FIFA lookup quietly
+// falls back rather than stalling or erroring the detail view.
+func matchHighlights(ctx context.Context, m provider.Match) string {
+	if m.State != provider.StateFinished {
+		return "" // highlights only exist once a match is done
+	}
+	fctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if u, err := fifa.New().Highlights(fctx, m.Home.Abbr, m.Away.Abbr, m.HomeScore, m.AwayScore); err == nil && u != "" {
+		return u
+	}
+	return youtubeSearchURL(m)
+}
+
+func renderMatchDetail(d provider.MatchDetail, loc *time.Location, highlights string) string {
 	m := d.Match
 	var status string
 	switch m.State {
@@ -173,10 +209,21 @@ func renderMatchDetail(d provider.MatchDetail, loc *time.Location) string {
 		}
 		out += ui.Faint.Render(venue) + "\n"
 	}
+	if highlights != "" {
+		out += ui.Faint.Render("▶ Highlights: ") + ui.Muted.Render(highlights) + "\n"
+	}
 	if len(d.Events) > 0 {
 		out += "\n" + ui.Timeline(d.Events)
 	}
 	return out
+}
+
+// youtubeSearchURL builds a YouTube search link for a match's official
+// highlights — the fallback when FIFA's exact link isn't available. It is
+// deterministic from the team names, so it needs no network call.
+func youtubeSearchURL(m provider.Match) string {
+	q := fmt.Sprintf("%s vs %s highlights World Cup 2026", m.Home.Name, m.Away.Name)
+	return "https://www.youtube.com/results?search_query=" + url.QueryEscape(q)
 }
 
 // humanInt formats an integer with thousands separators (80824 -> "80,824").
