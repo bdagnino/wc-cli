@@ -13,7 +13,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var matchLast bool
+var (
+	matchLast  bool
+	matchVideo bool
+)
 
 var matchCmd = &cobra.Command{
 	Use:   "match [team]",
@@ -55,16 +58,35 @@ var matchCmd = &cobra.Command{
 			_, err := emitJSON(detail)
 			return err
 		}
-		fmt.Print(renderMatchDetail(detail, loc, matchHighlights(ctx, *chosen)))
+		hl := matchHighlights(ctx, *chosen)
+		fmt.Print(renderMatchDetail(detail, loc, hl))
 		if derr != nil {
 			fmt.Println(ui.Faint.Render("(timeline unavailable)"))
+		}
+		if matchVideo {
+			openHighlights(hl)
 		}
 		return nil
 	},
 }
 
+// openHighlights launches the highlights link in the default browser, or notes
+// when there's nothing to open (a match that hasn't finished).
+func openHighlights(url string) {
+	if url == "" {
+		fmt.Println(ui.Muted.Render("Nothing to open — highlights appear once a match has finished."))
+		return
+	}
+	if err := openInBrowser(url); err != nil {
+		fmt.Println(ui.Faint.Render("Couldn't open a browser: ") + err.Error())
+		return
+	}
+	fmt.Println(ui.Faint.Render("Opening highlights in your browser…"))
+}
+
 func init() {
 	matchCmd.Flags().BoolVar(&matchLast, "last", false, "show the most recent finished match (instead of live/next), e.g. wcup match arg --last")
+	matchCmd.Flags().BoolVar(&matchVideo, "video", false, "open the highlights video in your default browser")
 	rootCmd.AddCommand(matchCmd)
 }
 

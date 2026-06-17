@@ -72,7 +72,12 @@ wcup match --last            # most recent finished match overall
 
 For a finished match it also prints a **Highlights** link — the official FIFA
 reel (`fifa.com/en/watch/…`) when it's published, falling back to a YouTube
-search that reliably surfaces it otherwise.
+search that reliably surfaces it otherwise. Add `--video` to open that
+highlights reel in your default browser:
+
+```sh
+wcup match arg --last --video # show the game and open its highlights video
+```
 
 <p align="center">
   <img src="docs/screenshot-match.svg" alt="wcup match detail" width="560">
