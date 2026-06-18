@@ -73,6 +73,15 @@ type MatchDetail struct {
 	Attendance int
 }
 
+// Scorer is one player's tally in the tournament's top-scorer (Golden Boot)
+// race.
+type Scorer struct {
+	Rank     int
+	Player   string
+	TeamAbbr string
+	Goals    int
+}
+
 // GroupStanding is one team's row within a group table.
 type GroupStanding struct {
 	Team         Team

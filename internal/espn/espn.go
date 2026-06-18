@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bdagnino/wc-cli/internal/provider"
@@ -17,16 +18,34 @@ import (
 
 const defaultBase = "https://site.api.espn.com/apis"
 
+// defaultCoreBase is the "core" hypermedia API, used for season-wide leaders
+// (top scorers) which the site API doesn't expose.
+const defaultCoreBase = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/fifa.world"
+
+const (
+	scorersSeason = "2026"
+	// scorersType 0 is the whole-tournament aggregate, so the Golden Boot race
+	// keeps accumulating across the group stage and knockouts (a per-stage type
+	// would reset).
+	scorersType = "0"
+)
+
 // Client is an ESPN-backed provider.
 type Client struct {
 	HTTP *http.Client
-	// base is the API root; overridable in tests.
-	base string
+	// base is the site API root; coreBase is the core API root. Both are
+	// overridable in tests.
+	base     string
+	coreBase string
 }
 
 // New returns a Client with sensible network defaults.
 func New() *Client {
-	return &Client{HTTP: &http.Client{Timeout: 15 * time.Second}, base: defaultBase}
+	return &Client{
+		HTTP:     &http.Client{Timeout: 15 * time.Second},
+		base:     defaultBase,
+		coreBase: defaultCoreBase,
+	}
 }
 
 func (c *Client) get(ctx context.Context, url string, dst any) error {
@@ -232,6 +251,73 @@ func (c *Client) Detail(ctx context.Context, id string) (provider.MatchDetail, e
 		})
 	}
 	return d, nil
+}
+
+// Scorers returns the tournament's top scorers (most goals first), limited to
+// the top n. The leaders feed references each athlete by link, so names are
+// resolved with one concurrent request per scorer.
+func (c *Client) Scorers(ctx context.Context, n int) ([]provider.Scorer, error) {
+	url := fmt.Sprintf("%s/seasons/%s/types/%s/leaders?lang=en", c.coreBase, scorersSeason, scorersType)
+	var raw leadersResp
+	if err := c.get(ctx, url, &raw); err != nil {
+		return nil, err
+	}
+	leaders := raw.goalsLeaders()
+	if n > 0 && len(leaders) > n {
+		leaders = leaders[:n]
+	}
+
+	out := make([]provider.Scorer, len(leaders))
+	var wg sync.WaitGroup
+	rank := 1
+	for i, l := range leaders {
+		// Standard competition ranking: equal goals share a rank.
+		if i > 0 && l.Value < leaders[i-1].Value {
+			rank = i + 1
+		}
+		out[i] = provider.Scorer{Rank: rank, Goals: int(l.Value)}
+		wg.Add(1)
+		go func(i int, ref string) {
+			defer wg.Done()
+			out[i].Player, out[i].TeamAbbr = c.athlete(ctx, ref)
+		}(i, l.Athlete.Ref)
+	}
+	wg.Wait()
+	return out, nil
+}
+
+// athlete resolves an athlete link to a display name and 3-letter country code.
+// Failures degrade to empty strings so one bad row doesn't sink the table.
+func (c *Client) athlete(ctx context.Context, ref string) (name, code string) {
+	if ref == "" {
+		return "", ""
+	}
+	var a athleteResp
+	if err := c.get(ctx, httpsURL(ref), &a); err != nil {
+		return "", ""
+	}
+	return a.DisplayName, countryFromFlag(a.Flag.Href)
+}
+
+// countryFromFlag pulls "ARG" out of a flag URL like ".../countries/500/arg.png".
+func countryFromFlag(href string) string {
+	if href == "" {
+		return ""
+	}
+	base := href[strings.LastIndex(href, "/")+1:]
+	if i := strings.IndexByte(base, '.'); i >= 0 {
+		base = base[:i]
+	}
+	return strings.ToUpper(base)
+}
+
+// httpsURL upgrades an http link to https. ESPN's core API returns http
+// $ref links; we keep all traffic on https.
+func httpsURL(u string) string {
+	if strings.HasPrefix(u, "http://") {
+		return "https://" + u[len("http://"):]
+	}
+	return u
 }
 
 func eventKind(text string) provider.EventKind {

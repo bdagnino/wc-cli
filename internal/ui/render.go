@@ -150,6 +150,31 @@ func MatchListByDay(title string, matches []provider.Match, loc *time.Location) 
 	return b.String()
 }
 
+// Scorers renders the top-scorer (Golden Boot) table: goals first, then the
+// player's flag, name, and 3-letter code.
+func Scorers(scorers []provider.Scorer) string {
+	var b strings.Builder
+	b.WriteString(Title.Render("⚽ Top scorers") + "\n")
+	if len(scorers) == 0 {
+		b.WriteString(Muted.Render("  (no goals yet)") + "\n")
+		return b.String()
+	}
+	nameCell := lipgloss.NewStyle().Width(nameW).MaxWidth(nameW).Inline(true).Foreground(cWhite)
+	for _, s := range scorers {
+		player := s.Player
+		if player == "" {
+			player = "Unknown"
+		}
+		b.WriteString(fmt.Sprintf("  %s  %s %s  %s\n",
+			Score.Render(fmt.Sprintf("%2d", s.Goals)),
+			Flag(s.TeamAbbr),
+			nameCell.Render(player),
+			Faint.Render(s.TeamAbbr),
+		))
+	}
+	return b.String()
+}
+
 // Standings renders group tables. If filter is non-empty, only that group letter.
 func Standings(groups []provider.Group, filter string) string {
 	var b strings.Builder

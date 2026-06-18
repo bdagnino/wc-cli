@@ -2,6 +2,7 @@ package espn
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,79 @@ import (
 
 	"github.com/bdagnino/wc-cli/internal/provider"
 )
+
+// TestScorersParsing exercises the leaders feed plus the per-athlete name
+// resolution. A TLS server is used because the client upgrades the http $ref
+// links to https before following them.
+func TestScorersParsing(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/seasons/2026/types/0/leaders", func(w http.ResponseWriter, r *http.Request) {
+		host := "https://" + r.Host
+		fmt.Fprintf(w, `{"categories":[
+		  {"name":"assistsLeaders","leaders":[]},
+		  {"name":"goalsLeaders","leaders":[
+		    {"value":3.0,"athlete":{"$ref":"%s/athletes/1?lang=en"}},
+		    {"value":2.0,"athlete":{"$ref":"%s/athletes/2?lang=en"}},
+		    {"value":2.0,"athlete":{"$ref":"%s/athletes/3?lang=en"}}
+		  ]}]}`, host, host, host)
+	})
+	mux.HandleFunc("/athletes/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/athletes/1":
+			fmt.Fprint(w, `{"displayName":"Lionel Messi","flag":{"href":"https://e/i/countries/500/arg.png"}}`)
+		case "/athletes/2":
+			fmt.Fprint(w, `{"displayName":"Kylian Mbappe","flag":{"href":"https://e/i/countries/500/fra.png"}}`)
+		default:
+			fmt.Fprint(w, `{"displayName":"Erling Haaland","flag":{"href":"https://e/i/countries/500/nor.png"}}`)
+		}
+	})
+	srv := httptest.NewTLSServer(mux)
+	t.Cleanup(srv.Close)
+	c := &Client{HTTP: srv.Client(), coreBase: srv.URL}
+
+	got, err := c.Scorers(context.Background(), 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("want 3 scorers, got %d", len(got))
+	}
+	if got[0].Player != "Lionel Messi" || got[0].Goals != 3 || got[0].TeamAbbr != "ARG" || got[0].Rank != 1 {
+		t.Fatalf("scorer[0] = %+v", got[0])
+	}
+	// Equal goals share a rank.
+	if got[1].Rank != 2 || got[2].Rank != 2 {
+		t.Fatalf("tie ranks wrong: got %d and %d", got[1].Rank, got[2].Rank)
+	}
+	if got[2].TeamAbbr != "NOR" {
+		t.Fatalf("country-from-flag wrong: %q", got[2].TeamAbbr)
+	}
+}
+
+func TestScorersLimit(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/seasons/2026/types/0/leaders", func(w http.ResponseWriter, r *http.Request) {
+		host := "https://" + r.Host
+		fmt.Fprintf(w, `{"categories":[{"name":"goalsLeaders","leaders":[
+		    {"value":3.0,"athlete":{"$ref":"%s/athletes/1?lang=en"}},
+		    {"value":2.0,"athlete":{"$ref":"%s/athletes/2?lang=en"}}
+		  ]}]}`, host, host)
+	})
+	mux.HandleFunc("/athletes/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"displayName":"Someone","flag":{"href":"https://e/x/bra.png"}}`)
+	})
+	srv := httptest.NewTLSServer(mux)
+	t.Cleanup(srv.Close)
+	c := &Client{HTTP: srv.Client(), coreBase: srv.URL}
+
+	got, err := c.Scorers(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("want 1 scorer with limit=1, got %d", len(got))
+	}
+}
 
 // newTestClient spins an in-process server that serves canned ESPN payloads,
 // so the parsing logic is exercised without touching the network.

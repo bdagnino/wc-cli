@@ -48,6 +48,7 @@ Run `wcup` with no arguments for a smart summary — what's **live now**, else
 | `wcup schedule` | Upcoming fixtures across the tournament |
 | `wcup results` | Recently finished matches |
 | `wcup standings` | Group tables |
+| `wcup scorers` | Top scorers — the Golden Boot race |
 | `wcup bracket` | Knockout bracket |
 | `wcup match` | Detail for a live / featured match |
 | `wcup team <name>` | A team's fixtures, results, and group |

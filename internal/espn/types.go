@@ -124,6 +124,42 @@ type keyEvent struct {
 	} `json:"participants"`
 }
 
+// leadersResp is the core-API season leaders feed. Each leader references its
+// athlete by hypermedia link rather than embedding the name, so the name is
+// resolved with a follow-up request per scorer.
+type leadersResp struct {
+	Categories []struct {
+		Name    string        `json:"name"`
+		Leaders []leaderEntry `json:"leaders"`
+	} `json:"categories"`
+}
+
+// goalsLeaders returns the goals ranking, or nil if absent.
+func (r leadersResp) goalsLeaders() []leaderEntry {
+	for _, c := range r.Categories {
+		if c.Name == "goalsLeaders" {
+			return c.Leaders
+		}
+	}
+	return nil
+}
+
+type leaderEntry struct {
+	Value   float64 `json:"value"` // goal count
+	Athlete struct {
+		Ref string `json:"$ref"`
+	} `json:"athlete"`
+}
+
+// athleteResp is the slice of an athlete document we need: the display name and
+// a flag whose filename carries the 3-letter country code (".../arg.png").
+type athleteResp struct {
+	DisplayName string `json:"displayName"`
+	Flag        struct {
+		Href string `json:"href"`
+	} `json:"flag"`
+}
+
 type standingEntry struct {
 	Team  team `json:"team"`
 	Stats []struct {

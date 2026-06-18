@@ -18,6 +18,9 @@ type Provider interface {
 	Teams(ctx context.Context) ([]Team, error)
 	// Standings returns the group tables.
 	Standings(ctx context.Context) ([]Group, error)
+	// Scorers returns the tournament's top scorers, most goals first, limited
+	// to the top n (n <= 0 means all available).
+	Scorers(ctx context.Context, n int) ([]Scorer, error)
 	// Detail returns a single match's timeline and game info by its ID.
 	Detail(ctx context.Context, id string) (MatchDetail, error)
 }

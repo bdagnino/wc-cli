@@ -48,6 +48,7 @@ location; otherwise times come back in the machine's local zone.
 | "Brazil's schedule / fixtures" | `wcup schedule --team brazil --json` |
 | "results", "what were the scores" | `wcup results --json` (filter with `--team`) |
 | "group F table", "standings" | `wcup standings --group F --json` |
+| "top scorers", "Golden Boot", "who's scored most" | `wcup scorers --json` (cap with `-n`) |
 | "knockout bracket" | `wcup bracket --json` |
 | "everything about a team" | `wcup team <name> --json` |
 | "who's in the tournament", team codes | `wcup teams --json` |
