@@ -37,7 +37,7 @@ func init() {
 func addFilterFlags(c *cobra.Command, o *filterOpts) {
 	c.Flags().StringVar(&o.team, "team", "", "filter by team (name or code, e.g. BRA)")
 	c.Flags().StringVar(&o.group, "group", "", "filter by group letter (A–L)")
-	c.Flags().StringVar(&o.date, "date", "", "filter by date (today, tomorrow, YYYY-MM-DD)")
+	c.Flags().StringVar(&o.date, "date", "", "filter by date (today, yesterday, tomorrow, YYYY-MM-DD)")
 	c.Flags().StringVar(&o.round, "round", "", "filter by round (group, r32, r16, qf, sf, final)")
 	c.Flags().IntVarP(&o.limit, "limit", "n", 0, "limit number of matches shown")
 }

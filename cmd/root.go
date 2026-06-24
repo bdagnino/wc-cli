@@ -24,6 +24,14 @@ var rootCmd = &cobra.Command{
 	Short: "Follow the 2026 World Cup from your terminal",
 	Long: "wcup shows World Cup 2026 scores, schedules, standings and teams\n" +
 		"straight from the terminal. No account, no API key.",
+	Example: "  wcup                         smart summary (live → today → next)\n" +
+		"  wcup today                   today's matches, with live scores\n" +
+		"  wcup today --date yesterday  another day (today|yesterday|tomorrow|YYYY-MM-DD)\n" +
+		"  wcup live                    matches in progress right now\n" +
+		"  wcup standings               all group tables\n" +
+		"  wcup group J                 one group's table\n" +
+		"  wcup match arg --last        a team's most recent finished match\n\n" +
+		"Most list commands accept --team, --group, --date and --round filters.",
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	// Bare `wcup`: a smart summary — live now, else today, else next up.

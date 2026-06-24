@@ -43,11 +43,12 @@ location; otherwise times come back in the machine's local zone.
 | The user asks… | Run |
 | --- | --- |
 | "what's on today", "any games today" | `wcup today --json` |
+| "yesterday's / tomorrow's games", "matches on June 25" | `wcup today --date <yesterday\|tomorrow\|YYYY-MM-DD> --json` |
 | "what's live", "current scores" | `wcup live --json` |
 | "when does Argentina play next" | `wcup next --team argentina --json` |
 | "Brazil's schedule / fixtures" | `wcup schedule --team brazil --json` |
 | "results", "what were the scores" | `wcup results --json` (filter with `--team`) |
-| "group F table", "standings" | `wcup standings --group F --json` |
+| "group F table", "standings" | `wcup standings --group F --json` (or `wcup group F --json`) |
 | "top scorers", "Golden Boot", "who's scored most" | `wcup scorers --json` (cap with `-n`) |
 | "knockout bracket" | `wcup bracket --json` |
 | "everything about a team" | `wcup team <name> --json` |
@@ -55,7 +56,7 @@ location; otherwise times come back in the machine's local zone.
 | "details / goals for a match" | `wcup match <team-or-id> --json` |
 
 Filters that compose on `schedule`, `results`, `next`:
-`--team <name|code>`, `--group <A–L>`, `--date <today|tomorrow|YYYY-MM-DD>`,
+`--team <name|code>`, `--group <A–L>`, `--date <today|yesterday|tomorrow|YYYY-MM-DD>`,
 `--round <group|r32|r16|qf|sf|final>`, `-n <limit>`.
 
 Team names are fuzzy: `argentina`, `arg`, and `ARG` all work. If a team lookup

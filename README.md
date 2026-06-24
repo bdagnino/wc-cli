@@ -43,11 +43,13 @@ Run `wcup` with no arguments for a smart summary — what's **live now**, else
 | --- | --- |
 | `wcup` | Smart summary (live → today → next) |
 | `wcup today` | Today's matches, with live scores |
+| `wcup today --date <day>` | Another day's matches (`today`, `yesterday`, `tomorrow`, `YYYY-MM-DD`) |
 | `wcup live` | Only matches in progress right now |
 | `wcup next` | The next upcoming match |
 | `wcup schedule` | Upcoming fixtures across the tournament |
 | `wcup results` | Recently finished matches |
 | `wcup standings` | Group tables |
+| `wcup group <letter>` | One group's table (e.g. `wcup group J`) |
 | `wcup scorers` | Top scorers — the Golden Boot race |
 | `wcup bracket` | Knockout bracket |
 | `wcup match` | Detail for a live / featured match |
@@ -86,6 +88,14 @@ wcup match arg --last --video # show the game and open its highlights video
 
 ### Standings
 
+`wcup standings` prints every group table. For a single group, either pass the
+letter to `group` or filter `standings` — they're equivalent:
+
+```sh
+wcup group J                 # just Group J
+wcup standings --group J     # same thing
+```
+
 <p align="center">
   <img src="docs/screenshot-standings.svg" alt="wcup standings" width="520">
 </p>
@@ -97,7 +107,7 @@ wcup match arg --last --video # show the game and open its highlights video
 ```sh
 wcup schedule --team brazil          # by team (name or 3-letter code)
 wcup schedule --group F              # by group
-wcup schedule --date tomorrow        # today | tomorrow | YYYY-MM-DD
+wcup schedule --date tomorrow        # today | yesterday | tomorrow | YYYY-MM-DD
 wcup schedule --round qf             # group | r32 | r16 | qf | sf | final
 wcup next --team ARG -n 3            # limit how many show
 ```
