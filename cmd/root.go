@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 		"straight from the terminal. No account, no API key.",
 	Example: "  wcup                         smart summary (live → today → next)\n" +
 		"  wcup today                   today's matches, with live scores\n" +
-		"  wcup today --date yesterday  another day (today|yesterday|tomorrow|YYYY-MM-DD)\n" +
+		"  wcup day yesterday           another day (yesterday|tomorrow|YYYY-MM-DD)\n" +
 		"  wcup live                    matches in progress right now\n" +
 		"  wcup standings               all group tables\n" +
 		"  wcup group J                 one group's table\n" +

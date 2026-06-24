@@ -43,7 +43,7 @@ Run `wcup` with no arguments for a smart summary — what's **live now**, else
 | --- | --- |
 | `wcup` | Smart summary (live → today → next) |
 | `wcup today` | Today's matches, with live scores |
-| `wcup today --date <day>` | Another day's matches (`today`, `yesterday`, `tomorrow`, `YYYY-MM-DD`) |
+| `wcup day <when>` | Another day's matches (`yesterday`, `tomorrow`, `YYYY-MM-DD`) |
 | `wcup live` | Only matches in progress right now |
 | `wcup next` | The next upcoming match |
 | `wcup schedule` | Upcoming fixtures across the tournament |

@@ -45,7 +45,7 @@ location; otherwise times come back in the machine's local zone.
 | The user asks… | Run |
 | --- | --- |
 | "what's on today", "any games today" | `wcup today --json` |
-| "yesterday's / tomorrow's games", "matches on June 25" | `wcup today --date <yesterday\|tomorrow\|YYYY-MM-DD> --json` |
+| "yesterday's / tomorrow's games", "matches on June 25" | `wcup day <yesterday\|tomorrow\|YYYY-MM-DD> --json` |
 | "what's live", "current scores" | `wcup live --json` |
 | "when does Argentina play next" | `wcup next --team argentina --json` |
 | "Brazil's schedule / fixtures" | `wcup schedule --team brazil --json` |
