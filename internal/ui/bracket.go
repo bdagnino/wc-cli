@@ -37,6 +37,8 @@ type bSlot struct {
 	name string
 	real bool // a qualified national team (not a placeholder)
 
+	projected bool // penciled in from current group standings, not yet qualified
+
 	hasSrc   bool // filled by the winner of an earlier match
 	srcRound bRound
 	srcN     int
@@ -165,3 +167,104 @@ func BuildBracket(ms []provider.Match) (b *Bracket, ok bool) {
 // IDs are numeric strings; sort.SliceStable on kick handles ordering, but keep a
 // numeric helper in case two kickoffs tie.
 func numericID(id string) int { n, _ := strconv.Atoi(id); return n }
+
+// slotTokenRe matches a group-placeholder code like "1A", "2B" or "3I":
+// rank 1–3 followed by a group letter A–L.
+var slotTokenRe = regexp.MustCompile(`^([1-3])([A-La-l])$`)
+
+// slotNameRe pulls the group letter out of a placeholder name like
+// "Group A Winner" or "Group I 3rd Place".
+var slotNameRe = regexp.MustCompile(`(?i)group\s+([A-L])\b`)
+
+// multiGroupRe spots an indeterminate third-place slot whose name lists several
+// groups, e.g. "Third Place Group A/B/C/D/F". Which group's third-placed team
+// actually lands there isn't settled by the standings alone (it follows FIFA's
+// best-thirds allocation table), so these are never penciled in.
+var multiGroupRe = regexp.MustCompile(`(?i)group\s+[A-L]\s*/`)
+
+// groupSlotRef reports the group letter and finishing rank a placeholder slot
+// stands for ("1A" → A, 1). It prefers the short code and falls back to parsing
+// the name, so it works whether ESPN sends "2C" or "Group C Runner-Up".
+func groupSlotRef(s bSlot) (rank int, letter string, ok bool) {
+	if m := slotTokenRe.FindStringSubmatch(strings.TrimSpace(s.abbr)); m != nil {
+		rank, _ = strconv.Atoi(m[1])
+		return rank, strings.ToUpper(m[2]), true
+	}
+	if multiGroupRe.MatchString(s.name) {
+		return 0, "", false
+	}
+	lm := slotNameRe.FindStringSubmatch(s.name)
+	if lm == nil {
+		return 0, "", false
+	}
+	letter = strings.ToUpper(lm[1])
+	low := strings.ToLower(s.name)
+	switch {
+	case strings.Contains(low, "winner") || strings.Contains(low, "1st") || strings.Contains(low, "first"):
+		rank = 1
+	case strings.Contains(low, "runner") || strings.Contains(low, "2nd") || strings.Contains(low, "second"):
+		rank = 2
+	case strings.Contains(low, "3rd") || strings.Contains(low, "third"):
+		rank = 3
+	default:
+		return 0, "", false
+	}
+	return rank, letter, true
+}
+
+// standingsTeam returns the team currently sitting at the given rank in the
+// given group, by rank field with a slice-position fallback.
+func standingsTeam(groups []provider.Group, letter string, rank int) (provider.Team, bool) {
+	for _, g := range groups {
+		if !strings.EqualFold(g.Letter, letter) {
+			continue
+		}
+		for _, st := range g.Standings {
+			if st.Rank == rank {
+				return st.Team, true
+			}
+		}
+		if rank >= 1 && rank-1 < len(g.Standings) {
+			return g.Standings[rank-1].Team, true
+		}
+	}
+	return provider.Team{}, false
+}
+
+// Project pencils in group-placeholder slots (1A, 2B, 3I…) with the team that
+// would occupy each if the current group standings held. Slots already filled
+// by a qualified team or fed by an earlier match are left alone, as are ones
+// ESPN hasn't pinned to a specific group and rank (e.g. a bare "3RD"). It
+// returns how many slots it filled.
+func (b *Bracket) Project(groups []provider.Group) int {
+	n := 0
+	for r := bRound(0); r < nRounds; r++ {
+		for _, m := range b.rounds[r] {
+			if projectSlot(&m.home, groups) {
+				n++
+			}
+			if projectSlot(&m.away, groups) {
+				n++
+			}
+		}
+	}
+	return n
+}
+
+func projectSlot(s *bSlot, groups []provider.Group) bool {
+	if s.real || s.hasSrc || s.projected {
+		return false
+	}
+	rank, letter, ok := groupSlotRef(*s)
+	if !ok {
+		return false
+	}
+	t, ok := standingsTeam(groups, letter, rank)
+	if !ok || t.Abbr == "" {
+		return false
+	}
+	s.abbr = t.Abbr
+	s.name = t.Name
+	s.projected = true
+	return true
+}
