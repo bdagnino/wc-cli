@@ -30,6 +30,7 @@ var rootCmd = &cobra.Command{
 		"  wcup live                    matches in progress right now\n" +
 		"  wcup standings               all group tables\n" +
 		"  wcup group J                 one group's table\n" +
+		"  wcup bracket                 the knockout tree (or `bracket arg` for a path)\n" +
 		"  wcup match arg --last        a team's most recent finished match\n\n" +
 		"Most list commands accept --team, --group, --date and --round filters.",
 	SilenceUsage:  true,

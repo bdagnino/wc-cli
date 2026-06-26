@@ -51,7 +51,7 @@ Run `wcup` with no arguments for a smart summary — what's **live now**, else
 | `wcup standings` | Group tables |
 | `wcup group <letter>` | One group's table (e.g. `wcup group J`) |
 | `wcup scorers` | Top scorers — the Golden Boot race |
-| `wcup bracket` | Knockout bracket |
+| `wcup bracket [team]` | Knockout bracket — the full tree, or one team's path |
 | `wcup match` | Detail for a live / featured match |
 | `wcup team <name>` | A team's fixtures, results, and group |
 | `wcup teams` | List all teams (or search for one) |
@@ -99,6 +99,21 @@ wcup standings --group J     # same thing
 <p align="center">
   <img src="docs/screenshot-standings.svg" alt="wcup standings" width="520">
 </p>
+
+### Knockout bracket
+
+`wcup bracket` draws the whole knockout stage as a tree, Round of 32 through the
+final, with the fixtures and connecting lines. Empty slots show as `TBD` (or the
+group placeholder, e.g. `2I`) until the teams are decided — the structure comes
+straight from the feed, so it fills in as results come in.
+
+```sh
+wcup bracket             # the full tree (wide — best in a roomy terminal)
+wcup bracket argentina   # just one team's road to the final
+```
+
+`wcup bracket <team>` is the compact view — a single team's path through each
+round, with the opponent it faces (or awaits) at every stage.
 
 ### Filters
 
