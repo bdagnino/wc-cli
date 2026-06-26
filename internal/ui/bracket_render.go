@@ -21,6 +21,7 @@ const (
 	pitch   = 5 // rows per leaf (card height + 1 gap)
 	connGap = 3 // horizontal gap between columns, for connectors
 	colW    = cardW + connGap
+	flagW   = 2 // display columns a flag emoji occupies
 )
 
 func colX(r bRound) int { return int(r) * colW }
@@ -56,10 +57,16 @@ func paint(id uint8, s string) string {
 	return s
 }
 
+// cell holds a glyph string (usually one rune, but a flag emoji is several) so
+// the canvas can carry double-width glyphs. A wide glyph lives in its left cell;
+// the columns it spills into are marked cont and emit nothing.
 type cell struct {
-	r rune
-	s uint8
+	g    string
+	s    uint8
+	cont bool
 }
+
+func (c cell) blank() bool { return c.g == "" && !c.cont && c.s == stNone }
 
 type canvas struct {
 	w, h int
@@ -70,16 +77,25 @@ func newCanvas(w, h int) *canvas {
 	g := make([][]cell, h)
 	for y := range g {
 		g[y] = make([]cell, w)
-		for x := range g[y] {
-			g[y][x] = cell{' ', stNone}
-		}
 	}
 	return &canvas{w, h, g}
 }
 
 func (c *canvas) put(x, y int, r rune, s uint8) {
 	if x >= 0 && x < c.w && y >= 0 && y < c.h {
-		c.g[y][x] = cell{r, s}
+		c.g[y][x] = cell{g: string(r), s: s}
+	}
+}
+
+// putWide places a glyph that occupies width display columns (a flag is 2),
+// reserving the spilled-into columns so everything to its right stays aligned.
+func (c *canvas) putWide(x, y int, glyph string, s uint8, width int) {
+	if x < 0 || x >= c.w || y < 0 || y >= c.h {
+		return
+	}
+	c.g[y][x] = cell{g: glyph, s: s}
+	for k := 1; k < width && x+k < c.w; k++ {
+		c.g[y][x+k] = cell{cont: true, s: s}
 	}
 }
 
@@ -94,19 +110,27 @@ func (c *canvas) String() string {
 	for y := 0; y < c.h; y++ {
 		row := c.g[y]
 		end := c.w
-		for end > 0 && row[end-1].r == ' ' && row[end-1].s == stNone {
+		for end > 0 && row[end-1].blank() {
 			end--
 		}
 		for i := 0; i < end; {
+			if row[i].cont { // spilled column of a wide glyph already emitted
+				i++
+				continue
+			}
+			var seg strings.Builder
 			j := i
 			for j < end && row[j].s == row[i].s {
+				if !row[j].cont {
+					if row[j].g == "" {
+						seg.WriteByte(' ')
+					} else {
+						seg.WriteString(row[j].g)
+					}
+				}
 				j++
 			}
-			seg := make([]rune, j-i)
-			for k := i; k < j; k++ {
-				seg[k-i] = row[k].r
-			}
-			b.WriteString(paint(row[i].s, string(seg)))
+			b.WriteString(paint(row[i].s, seg.String()))
 			i = j
 		}
 		b.WriteByte('\n')
@@ -224,7 +248,12 @@ func drawSide(cv *canvas, x, y int, m *bMatch, home bool) {
 
 	cv.put(x, y, '│', stFaint)
 	cv.put(x+1, y, ' ', stFaint)
-	cv.text(x+2, y, fitLeft(cardLabel(slot), labelW), id)
+	// Flag (2 columns) for real teams; blank for placeholders, so codes align.
+	if slot.real {
+		cv.putWide(x+2, y, Flag(slot.abbr), id, 2)
+	}
+	// Then a gap and the short code/token in the remaining label width.
+	cv.text(x+2+flagW+1, y, fitLeft(cardLabel(slot), labelW-flagW-1), id)
 	cv.put(x+2+labelW, y, ' ', stFaint)
 	sc := ""
 	if m.state != provider.StateScheduled {
@@ -334,7 +363,7 @@ func (b *Bracket) Path(query string, loc *time.Location) (string, bool) {
 		}
 		round := Muted.Width(14).Render(roundTitles[s.m.round])
 		date := Faint.Render(fitLeft(s.m.kick.In(loc).Format("Mon 2 Jan 15:04"), 16))
-		us := Header.Render(teamSlot.abbr)
+		us := Flag(teamSlot.abbr) + " " + Header.Render(teamSlot.abbr)
 		vs := Faint.Render(" vs ")
 		b2.WriteString("  " + round + "  " + date + "  " + us + vs + opponentLabel(opp) + "\n")
 	}

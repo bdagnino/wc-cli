@@ -11,7 +11,9 @@ var iso2 = map[string]string{
 	"COD": "CD", "CRO": "HR", "CUW": "CW", "CZE": "CZ", "ECU": "EC",
 	"EGY": "EG", "FRA": "FR", "GER": "DE", "GHA": "GH", "HAI": "HT",
 	"IRN": "IR", "IRQ": "IQ", "CIV": "CI", "JPN": "JP", "JOR": "JO",
-	"MEX": "MX", "MAR": "MA", "NED": "NL", "NZL": "NZ", "NOR": "NO",
+	// Morocco appears as MAR in the scoreboard feed but MOR in the top-scorers
+	// feed (its flag file is mor.png); map both to Morocco.
+	"MEX": "MX", "MAR": "MA", "MOR": "MA", "NED": "NL", "NZL": "NZ", "NOR": "NO",
 	"PAN": "PA", "PAR": "PY", "POR": "PT", "QAT": "QA", "KSA": "SA",
 	"SEN": "SN", "RSA": "ZA", "KOR": "KR", "ESP": "ES", "SWE": "SE",
 	"SUI": "CH", "TUN": "TN", "TUR": "TR", "USA": "US", "URU": "UY",
