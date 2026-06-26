@@ -69,6 +69,43 @@ func TestBuildBracketStructure(t *testing.T) {
 	}
 }
 
+// numberedBracket is the same 4-team shape, but the event ids are in a
+// different permutation from the bracket match numbers — exactly how ESPN's
+// feed behaves. Ordering must follow MatchNumber, not the id. If it followed
+// the id, R16 #1 would pair ARG with ESP instead of ARG with GER.
+func numberedBracket() []provider.Match {
+	t := func(d int) time.Time { return time.Date(2026, 7, d, 12, 0, 0, 0, time.UTC) }
+	withNum := func(m provider.Match, num int) provider.Match { m.MatchNumber = num; return m }
+	return []provider.Match{
+		withNum(km("100", "Round of 32", "ARG", "Argentina", "BRA", "Brazil", t(6)), 73),
+		withNum(km("101", "Round of 32", "ESP", "Spain", "FRA", "France", t(7)), 75),
+		withNum(km("102", "Round of 32", "GER", "Germany", "ITA", "Italy", t(8)), 74),
+		withNum(km("103", "Round of 32", "NED", "Netherlands", "POR", "Portugal", t(9)), 76),
+		withNum(km("200", "Round of 16", "", "Round of 32 1 Winner", "", "Round of 32 2 Winner", t(12)), 89),
+		withNum(km("201", "Round of 16", "", "Round of 32 3 Winner", "", "Round of 32 4 Winner", t(13)), 90),
+		withNum(km("300", "Final", "", "Round of 16 1 Winner", "", "Round of 16 2 Winner", t(15)), 104),
+	}
+}
+
+func TestBuildBracketOrdersByMatchNumber(t *testing.T) {
+	b, ok := BuildBracket(numberedBracket())
+	if !ok {
+		t.Fatal("BuildBracket reported the tree is not formed")
+	}
+	// Round must be ordered by match number (ARG 73, GER 74, ESP 75, NED 76),
+	// not by event id (ARG 100, ESP 101, GER 102, NED 103).
+	want := []string{"ARG", "GER", "ESP", "NED"}
+	for i, w := range want {
+		if got := b.rounds[rR32][i].home.abbr; got != w {
+			t.Fatalf("R32 #%d home = %q, want %q (match-number order)", i+1, got, w)
+		}
+	}
+	// "Round of 32 2 Winner" must resolve to GER (number 74), not ESP (id 101).
+	if got := b.rounds[rR16][0].lower; got != b.rounds[rR32][1] || got.home.abbr != "GER" {
+		t.Fatal("R16 #1 second feeder did not resolve to GER via match number")
+	}
+}
+
 // projectableBracket has a Round of 32 made entirely of group placeholders, in
 // both the "2A" short-code and "Group A Winner" name styles, so Project can be
 // exercised against both. Later rounds feed off match winners (TBD).

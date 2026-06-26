@@ -43,6 +43,12 @@ type Match struct {
 	Round string
 	// Group is the group letter when applicable.
 	Group string
+	// MatchNumber is the source's canonical bracket position (FIFA match
+	// number: 1..104). It is the index the knockout placeholders count on
+	// ("Round of 32 N Winner" points at the match with number N within its
+	// round), so it — not the event id — orders the bracket tree. Zero when
+	// the source hasn't supplied it.
+	MatchNumber int
 }
 
 // EventKind classifies a moment in a match timeline.

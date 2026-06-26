@@ -42,6 +42,18 @@ var bracketCmd = &cobra.Command{
 			return nil
 		}
 
+		// Order the tree by the source's canonical match numbers. Best-effort:
+		// if the lookup fails, BuildBracket falls back to event-id order.
+		ids := make([]string, len(ko))
+		for i := range ko {
+			ids[i] = ko[i].ID
+		}
+		if nums, err := p.BracketOrder(ctx, ids); err == nil {
+			for i := range ko {
+				ko[i].MatchNumber = nums[ko[i].ID]
+			}
+		}
+
 		b, ok := ui.BuildBracket(ko)
 		if !ok {
 			// Fixtures exist but the tree isn't fully formed yet — fall back to

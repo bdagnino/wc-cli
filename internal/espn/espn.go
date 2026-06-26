@@ -286,6 +286,47 @@ func (c *Client) Scorers(ctx context.Context, n int) ([]provider.Scorer, error) 
 	return out, nil
 }
 
+// BracketOrder resolves each match id to its canonical bracket position. ESPN
+// only exposes that number ("matchNumber") on the core-API event document, not
+// the scoreboard, so it's fetched with one concurrent request per id. Ids that
+// fail to resolve are left out, so a flaky row can't break the ordering.
+func (c *Client) BracketOrder(ctx context.Context, ids []string) (map[string]int, error) {
+	nums := make([]int, len(ids))
+	var wg sync.WaitGroup
+	for i, id := range ids {
+		wg.Add(1)
+		go func(i int, id string) {
+			defer wg.Done()
+			nums[i] = c.matchNumber(ctx, id)
+		}(i, id)
+	}
+	wg.Wait()
+	out := make(map[string]int, len(ids))
+	for i, id := range ids {
+		if nums[i] > 0 {
+			out[id] = nums[i]
+		}
+	}
+	return out, nil
+}
+
+// matchNumber reads a single event's bracket position from the core API, or 0
+// if it's absent or the request fails.
+func (c *Client) matchNumber(ctx context.Context, id string) int {
+	var raw struct {
+		Competitions []struct {
+			MatchNumber int `json:"matchNumber"`
+		} `json:"competitions"`
+	}
+	if err := c.get(ctx, fmt.Sprintf("%s/events/%s?lang=en", c.coreBase, id), &raw); err != nil {
+		return 0
+	}
+	if len(raw.Competitions) == 0 {
+		return 0
+	}
+	return raw.Competitions[0].MatchNumber
+}
+
 // athlete resolves an athlete link to a display name and 3-letter country code.
 // Failures degrade to empty strings so one bad row doesn't sink the table.
 func (c *Client) athlete(ctx context.Context, ref string) (name, code string) {

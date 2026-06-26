@@ -47,8 +47,9 @@ type bSlot struct {
 
 type bMatch struct {
 	round  bRound
-	n      int    // 1-based position within the round, by ascending match id
-	id     int    // numeric ESPN match id; the bracket's "match N" numbering
+	n      int    // 1-based position within the round, by bracket match number
+	num    int    // source bracket position (FIFA match number); orders the tree
+	id     int    // numeric ESPN match id; fallback ordering when num is absent
 	kick   time.Time
 	state  provider.MatchState
 	home   bSlot
@@ -120,7 +121,7 @@ func BuildBracket(ms []provider.Match) (b *Bracket, ok bool) {
 		if !valid {
 			continue
 		}
-		bm := &bMatch{round: r, id: numericID(m.ID), kick: m.Kick, state: m.State,
+		bm := &bMatch{round: r, num: m.MatchNumber, id: numericID(m.ID), kick: m.Kick, state: m.State,
 			home: slotOf(m.Home), away: slotOf(m.Away), hScore: m.HomeScore, aScore: m.AwayScore}
 		// The third-place game shares the "Semifinals" label but feeds off
 		// losers — keep it out of the main tree.
@@ -129,13 +130,19 @@ func BuildBracket(ms []provider.Match) (b *Bracket, ok bool) {
 		}
 		b.rounds[r] = append(b.rounds[r], bm)
 	}
-	// Number matches within each round by ascending match id — that is the
-	// numbering ESPN's "Round of 32 N Winner" references point at (the ids are
-	// assigned in bracket order, which is not the same as kickoff order) — then
-	// resolve those references into real tree edges.
+	// Number matches within each round by ascending bracket match number —
+	// that is the numbering ESPN's "Round of 32 N Winner" references point at.
+	// Event ids are NOT in bracket order (ESPN assigns them in a different
+	// permutation), so we order by the match number fetched from the feed and
+	// only fall back to id when it's missing — then resolve those references
+	// into real tree edges.
 	for r := bRound(0); r < nRounds; r++ {
 		sort.SliceStable(b.rounds[r], func(i, j int) bool {
-			return b.rounds[r][i].id < b.rounds[r][j].id
+			a, c := b.rounds[r][i], b.rounds[r][j]
+			if a.num > 0 && c.num > 0 {
+				return a.num < c.num
+			}
+			return a.id < c.id
 		})
 		for i, m := range b.rounds[r] {
 			m.n = i + 1

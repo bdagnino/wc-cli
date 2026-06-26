@@ -23,4 +23,8 @@ type Provider interface {
 	Scorers(ctx context.Context, n int) ([]Scorer, error)
 	// Detail returns a single match's timeline and game info by its ID.
 	Detail(ctx context.Context, id string) (MatchDetail, error)
+	// BracketOrder returns the canonical bracket position (the source's match
+	// number) for each given match id. The knockout tree is ordered by this,
+	// not by event id. Ids whose number can't be resolved are omitted.
+	BracketOrder(ctx context.Context, ids []string) (map[string]int, error)
 }
