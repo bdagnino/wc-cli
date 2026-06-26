@@ -69,6 +69,92 @@ func TestBuildBracketStructure(t *testing.T) {
 	}
 }
 
+// projectableBracket has a Round of 32 made entirely of group placeholders, in
+// both the "2A" short-code and "Group A Winner" name styles, so Project can be
+// exercised against both. Later rounds feed off match winners (TBD).
+func projectableBracket() []provider.Match {
+	t := func(d int) time.Time { return time.Date(2026, 7, d, 12, 0, 0, 0, time.UTC) }
+	return []provider.Match{
+		km("100", "Round of 32", "1A", "Group A Winner", "2B", "Group B Runner-Up", t(9)),
+		km("101", "Round of 32", "", "Group C Winner", "", "Group D 2nd Place", t(8)),
+		km("102", "Round of 32", "3I", "Group I 3rd Place", "1E", "Group E Winner", t(7)),
+		km("103", "Round of 32", "3RD", "Third Place Group A/B/C/D/F", "9Z", "Bogus Slot", t(6)),
+		km("200", "Round of 16", "", "Round of 32 1 Winner", "", "Round of 32 2 Winner", t(12)),
+		km("201", "Round of 16", "", "Round of 32 3 Winner", "", "Round of 32 4 Winner", t(13)),
+		km("300", "Final", "", "Round of 16 1 Winner", "", "Round of 16 2 Winner", t(15)),
+	}
+}
+
+func standing(letter, abbr, name string, rank int) provider.GroupStanding {
+	return provider.GroupStanding{Team: provider.Team{Abbr: abbr, Name: name, Group: letter}, Rank: rank}
+}
+
+func projectGroups() []provider.Group {
+	return []provider.Group{
+		{Letter: "A", Standings: []provider.GroupStanding{standing("A", "ARG", "Argentina", 1), standing("A", "CRO", "Croatia", 2)}},
+		{Letter: "B", Standings: []provider.GroupStanding{standing("B", "ENG", "England", 1), standing("B", "USA", "United States", 2)}},
+		{Letter: "C", Standings: []provider.GroupStanding{standing("C", "FRA", "France", 1), standing("C", "MEX", "Mexico", 2)}},
+		{Letter: "D", Standings: []provider.GroupStanding{standing("D", "BRA", "Brazil", 1), standing("D", "JPN", "Japan", 2)}},
+		{Letter: "E", Standings: []provider.GroupStanding{standing("E", "ESP", "Spain", 1), standing("E", "GER", "Germany", 2)}},
+		{Letter: "I", Standings: []provider.GroupStanding{standing("I", "POR", "Portugal", 1), standing("I", "NED", "Netherlands", 2), standing("I", "GHA", "Ghana", 3)}},
+	}
+}
+
+func TestBracketProject(t *testing.T) {
+	b, ok := BuildBracket(projectableBracket())
+	if !ok {
+		t.Fatal("BuildBracket reported the tree is not formed")
+	}
+	n := b.Project(projectGroups())
+	// 1A, 2B, Group C Winner, Group D 2nd Place, 3I, 1E = 6 fillable slots.
+	if n != 6 {
+		t.Fatalf("Project filled %d slots, want 6", n)
+	}
+
+	r32 := b.rounds[rR32]
+	// Short code "1A" → group A first place.
+	if got := r32[0].home; !got.projected || got.abbr != "ARG" {
+		t.Errorf("slot 1A = %+v, want projected ARG", got)
+	}
+	// Short code "2B" → group B runner-up.
+	if got := r32[0].away; !got.projected || got.abbr != "USA" {
+		t.Errorf("slot 2B = %+v, want projected USA", got)
+	}
+	// Name-only "Group C Winner" → group C first place.
+	if got := r32[1].home; !got.projected || got.abbr != "FRA" {
+		t.Errorf("slot Group C Winner = %+v, want projected FRA", got)
+	}
+	// Name-only "Group D 2nd Place" → group D runner-up.
+	if got := r32[1].away; !got.projected || got.abbr != "JPN" {
+		t.Errorf("slot Group D 2nd Place = %+v, want projected JPN", got)
+	}
+	// Third-place code "3I" → group I third place.
+	if got := r32[2].home; !got.projected || got.abbr != "GHA" {
+		t.Errorf("slot 3I = %+v, want projected GHA", got)
+	}
+	// Unresolvable placeholders stay put: an indeterminate multi-group third-place
+	// slot ("Third Place Group A/B/C/D/F") and a bogus "9Z".
+	if r32[3].home.projected || r32[3].away.projected {
+		t.Errorf("indeterminate slots should not be projected: %+v / %+v", r32[3].home, r32[3].away)
+	}
+
+	// Penciled-in teams must not count as qualified, and match-fed slots stay TBD.
+	if r32[0].home.real {
+		t.Error("projected slot should not be marked real")
+	}
+	if b.rounds[rR16][0].home.projected {
+		t.Error("a match-fed (hasSrc) slot must never be projected")
+	}
+
+	// The full render should now contain the penciled-in codes.
+	out := b.Render(time.UTC)
+	for _, want := range []string{"ARG", "USA", "FRA", "GHA"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("rendered bracket missing projected %q", want)
+		}
+	}
+}
+
 func TestBracketPath(t *testing.T) {
 	b, _ := BuildBracket(miniBracket())
 	out, ok := b.Path("arg", time.UTC)

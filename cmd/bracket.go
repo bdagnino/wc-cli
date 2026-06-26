@@ -9,13 +9,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var bracketLive bool
+
 var bracketCmd = &cobra.Command{
 	Use:     "bracket [team]",
 	Aliases: []string{"ko"},
 	Short:   "Knockout bracket — the whole tree, or one team's path",
 	Long: "Draw the knockout stage as a bracket.\n\n" +
-		"  wcup bracket            the full tree, Round of 32 to the final\n" +
-		"  wcup bracket argentina  one team's road to the final",
+		"  wcup bracket             the full tree, Round of 32 to the final\n" +
+		"  wcup bracket argentina   one team's road to the final\n" +
+		"  wcup bracket --live      pencil in teams from the current standings",
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx, p, loc := setup()
@@ -46,6 +49,18 @@ var bracketCmd = &cobra.Command{
 			return renderRoundList(ko, loc)
 		}
 
+		// --live pencils empty group slots in from the current standings: if the
+		// group tables held as they are now, these are the teams that would land
+		// in each Round of 32 slot.
+		projected := 0
+		if bracketLive {
+			groups, err := p.Standings(ctx)
+			if err != nil {
+				return err
+			}
+			projected = b.Project(groups)
+		}
+
 		if len(args) == 1 {
 			path, found := b.Path(args[0], loc)
 			if !found {
@@ -56,6 +71,15 @@ var bracketCmd = &cobra.Command{
 		}
 
 		fmt.Print(b.Render(loc))
+		if bracketLive {
+			fmt.Println()
+			if projected > 0 {
+				fmt.Println(ui.Pencil.Render("penciled in") +
+					ui.Muted.Render(" — teams the current group standings would send here, if they held."))
+			} else {
+				fmt.Println(ui.Muted.Render("Nothing to pencil in yet — the group standings haven't taken shape."))
+			}
+		}
 		return nil
 	},
 }
@@ -85,5 +109,7 @@ func renderRoundList(ko []provider.Match, loc *time.Location) error {
 }
 
 func init() {
+	bracketCmd.Flags().BoolVar(&bracketLive, "live", false,
+		"pencil empty slots in with the teams the current group standings would send there")
 	rootCmd.AddCommand(bracketCmd)
 }

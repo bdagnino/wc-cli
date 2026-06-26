@@ -29,6 +29,9 @@ var (
 	Live     = lipgloss.NewStyle().Bold(true).Foreground(cGreen)
 	Upcoming = lipgloss.NewStyle().Foreground(cYellow)
 	Winner   = lipgloss.NewStyle().Bold(true).Foreground(cGreen)
+	// Pencil marks a team penciled into the bracket from current standings —
+	// tentative, so italic yellow rather than the confirmed bold white.
+	Pencil = lipgloss.NewStyle().Italic(true).Foreground(cYellow)
 )
 
 // SetColor enables or disables all styling. It honors --no-color and the

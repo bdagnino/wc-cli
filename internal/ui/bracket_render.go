@@ -37,6 +37,7 @@ const (
 	stWin
 	stTitle
 	stLive
+	stProj
 )
 
 func paint(id uint8, s string) string {
@@ -53,6 +54,8 @@ func paint(id uint8, s string) string {
 		return Title.Render(s)
 	case stLive:
 		return Live.Render(s)
+	case stProj:
+		return Pencil.Render(s)
 	}
 	return s
 }
@@ -233,7 +236,10 @@ func drawSide(cv *canvas, x, y int, m *bMatch, home bool) {
 	won := finished && ((home && m.hScore > m.aScore) || (!home && m.aScore > m.hScore))
 
 	id := stTeam
-	if !slot.real {
+	switch {
+	case slot.projected:
+		id = stProj
+	case !slot.real:
 		id = stMuted
 	}
 	if finished {
@@ -248,8 +254,9 @@ func drawSide(cv *canvas, x, y int, m *bMatch, home bool) {
 
 	cv.put(x, y, '│', stFaint)
 	cv.put(x+1, y, ' ', stFaint)
-	// Flag (2 columns) for real teams; blank for placeholders, so codes align.
-	if slot.real {
+	// Flag (2 columns) for real or penciled-in teams; blank for bare
+	// placeholders, so codes align.
+	if slot.real || slot.projected {
 		cv.putWide(x+2, y, Flag(slot.abbr), id, 2)
 	}
 	// Then a gap and the short code/token in the remaining label width.
@@ -321,11 +328,11 @@ func (b *Bracket) Path(query string, loc *time.Location) (string, bool) {
 	var start *bMatch
 	var side int
 	for _, m := range b.rounds[rR32] {
-		if m.home.real && slotMatches(m.home, q) {
+		if (m.home.real || m.home.projected) && slotMatches(m.home, q) {
 			start, side = m, 0
 			break
 		}
-		if m.away.real && slotMatches(m.away, q) {
+		if (m.away.real || m.away.projected) && slotMatches(m.away, q) {
 			start, side = m, 1
 			break
 		}
@@ -354,7 +361,11 @@ func (b *Bracket) Path(query string, loc *time.Location) (string, bool) {
 	}
 
 	var b2 strings.Builder
-	title := Flag(teamSlot.abbr) + " " + Header.Render(teamSlot.name) + Faint.Render(" — road to the final")
+	nameStyle := Header
+	if teamSlot.projected {
+		nameStyle = Pencil
+	}
+	title := Flag(teamSlot.abbr) + " " + nameStyle.Render(teamSlot.name) + Faint.Render(" — road to the final")
 	b2.WriteString(title + "\n\n")
 	for _, s := range steps {
 		opp := s.m.away
@@ -396,6 +407,9 @@ func slotMatches(s bSlot, q string) bool {
 func opponentLabel(s bSlot) string {
 	if s.real {
 		return Flag(s.abbr) + " " + Header.Render(s.name)
+	}
+	if s.projected {
+		return Flag(s.abbr) + " " + Pencil.Render(s.name)
 	}
 	if s.hasSrc {
 		return Muted.Render(fmt.Sprintf("winner of %s #%d", shortRound(s.srcRound), s.srcN))
