@@ -65,7 +65,14 @@ type competition struct {
 type competitor struct {
 	HomeAway string `json:"homeAway"`
 	Score    string `json:"score"`
-	Team     team   `json:"team"`
+	// Winner is the source's decided-winner flag, true for the side that
+	// advanced — including after a penalty shootout, where the regulation
+	// scores are level.
+	Winner bool `json:"winner"`
+	// ShootoutScore is the penalty-shootout tally, present only when a match
+	// went to penalties.
+	ShootoutScore *int `json:"shootoutScore"`
+	Team          team `json:"team"`
 }
 
 type team struct {

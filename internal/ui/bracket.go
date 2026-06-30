@@ -57,6 +57,11 @@ type bMatch struct {
 	hScore int
 	aScore int
 
+	winner   string // "home", "away", or "" — honours shootout results
+	shootout bool   // decided on penalties
+	hPen     int
+	aPen     int
+
 	upper *bMatch // feeder into home
 	lower *bMatch // feeder into away
 
@@ -122,7 +127,8 @@ func BuildBracket(ms []provider.Match) (b *Bracket, ok bool) {
 			continue
 		}
 		bm := &bMatch{round: r, num: m.MatchNumber, id: numericID(m.ID), kick: m.Kick, state: m.State,
-			home: slotOf(m.Home), away: slotOf(m.Away), hScore: m.HomeScore, aScore: m.AwayScore}
+			home: slotOf(m.Home), away: slotOf(m.Away), hScore: m.HomeScore, aScore: m.AwayScore,
+			winner: m.Winner, shootout: m.Shootout, hPen: m.HomeShootout, aPen: m.AwayShootout}
 		// The third-place game shares the "Semifinals" label but feeds off
 		// losers — keep it out of the main tree.
 		if bm.home.loser || bm.away.loser {
@@ -184,6 +190,28 @@ func BuildBracket(ms []provider.Match) (b *Bracket, ok bool) {
 		return b, true
 	}
 	return b, false
+}
+
+// wonBy reports whether the given side won a finished match. It trusts the
+// source's winner flag (so a side that advanced on penalties counts even though
+// the regulation score is level) and falls back to the score if no flag is set.
+func (m *bMatch) wonBy(home bool) bool {
+	if m.state != provider.StateFinished {
+		return false
+	}
+	switch m.winner {
+	case "home":
+		return home
+	case "away":
+		return !home
+	}
+	if m.hScore == m.aScore {
+		return false
+	}
+	if home {
+		return m.hScore > m.aScore
+	}
+	return m.aScore > m.hScore
 }
 
 // feederByTeam returns the match in round r that the given team played in,

@@ -431,6 +431,10 @@ func toMatch(e event, round string, groups map[string]string) (provider.Match, b
 		Away:      provider.Team{Abbr: away.Team.Abbreviation, Name: away.Team.DisplayName, Group: groups[away.Team.Abbreviation]},
 		HomeScore: atoi(home.Score),
 		AwayScore: atoi(away.Score),
+		Winner:    winnerSide(home, away),
+		Shootout:  home.ShootoutScore != nil || away.ShootoutScore != nil,
+		HomeShootout: derefInt(home.ShootoutScore),
+		AwayShootout: derefInt(away.ShootoutScore),
 		Detail:    st.Type.ShortDetail,
 		Clock:     st.DisplayClock,
 		Venue:     comp.Venue.FullName,
@@ -438,6 +442,26 @@ func toMatch(e event, round string, groups map[string]string) (provider.Match, b
 		Group:     groups[home.Team.Abbreviation],
 	}
 	return m, true
+}
+
+// winnerSide reports which side the source flagged as the winner, or "" when
+// neither is flagged (draw, or match not yet decided).
+func winnerSide(home, away competitor) string {
+	switch {
+	case home.Winner:
+		return "home"
+	case away.Winner:
+		return "away"
+	default:
+		return ""
+	}
+}
+
+func derefInt(p *int) int {
+	if p == nil {
+		return 0
+	}
+	return *p
 }
 
 func toState(s string) provider.MatchState {

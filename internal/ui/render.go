@@ -52,12 +52,18 @@ func Match(m provider.Match, loc *time.Location, anchor time.Time) string {
 		mid = Faint.Render("  vs  ")
 	} else {
 		hs, as := fmt.Sprintf("%d", m.HomeScore), fmt.Sprintf("%d", m.AwayScore)
+		if m.Shootout {
+			hs += fmt.Sprintf(" (%d)", m.HomeShootout)
+			as += fmt.Sprintf(" (%d)", m.AwayShootout)
+		}
 		hStyle, aStyle := Score, Score
 		if m.State == provider.StateFinished {
+			// Honour the source's winner flag so a side that advanced on
+			// penalties is highlighted even though the regulation score is level.
 			switch {
-			case m.HomeScore > m.AwayScore:
+			case m.Winner == "home" || (m.Winner == "" && m.HomeScore > m.AwayScore):
 				aStyle = Muted
-			case m.AwayScore > m.HomeScore:
+			case m.Winner == "away" || (m.Winner == "" && m.AwayScore > m.HomeScore):
 				hStyle = Muted
 			}
 		}

@@ -207,7 +207,11 @@ func renderMatchDetail(d provider.MatchDetail, loc *time.Location, highlights st
 	case provider.StateLive:
 		status = ui.Live.Render("● LIVE " + m.Clock)
 	case provider.StateFinished:
-		status = ui.Muted.Render("Full time")
+		ft := "Full time"
+		if m.Shootout {
+			ft += " · after penalties"
+		}
+		status = ui.Muted.Render(ft)
 	default:
 		status = ui.Upcoming.Render(m.Kick.In(loc).Format("Mon, Jan 2 · 15:04"))
 	}
@@ -215,6 +219,8 @@ func renderMatchDetail(d provider.MatchDetail, loc *time.Location, highlights st
 	scoreline := ui.Flag(m.Home.Abbr) + " " + ui.Header.Render(m.Home.Name)
 	if m.State == provider.StateScheduled {
 		scoreline += ui.Faint.Render("  vs  ")
+	} else if m.Shootout {
+		scoreline += ui.Score.Render(fmt.Sprintf("  %d (%d) – %d (%d)  ", m.HomeScore, m.HomeShootout, m.AwayScore, m.AwayShootout))
 	} else {
 		scoreline += ui.Score.Render(fmt.Sprintf("  %d – %d  ", m.HomeScore, m.AwayScore))
 	}

@@ -17,7 +17,6 @@ const (
 	cardW   = 16
 	cardH   = 4
 	labelW  = 9 // team code column inside a card
-	scoreW  = 2
 	pitch   = 5 // rows per leaf (card height + 1 gap)
 	connGap = 3 // horizontal gap between columns, for connectors
 	colW    = cardW + connGap
@@ -233,7 +232,7 @@ func drawSide(cv *canvas, x, y int, m *bMatch, home bool) {
 		score = m.hScore
 	}
 	finished := m.state == provider.StateFinished
-	won := finished && ((home && m.hScore > m.aScore) || (!home && m.aScore > m.hScore))
+	won := m.wonBy(home)
 
 	id := stTeam
 	switch {
@@ -265,8 +264,17 @@ func drawSide(cv *canvas, x, y int, m *bMatch, home bool) {
 	sc := ""
 	if m.state != provider.StateScheduled {
 		sc = strconv.Itoa(score)
+		if m.shootout {
+			pen := m.aPen
+			if home {
+				pen = m.hPen
+			}
+			sc += fmt.Sprintf("(%d)", pen)
+		}
 	}
-	cv.text(x+2+labelW+1, y, fitRight(sc, scoreW), id)
+	// Right-align against the card's right edge, so a "1(4)" shootout tally
+	// grows leftward into the unused space rather than colliding with the code.
+	cv.text(cardW+x-2-len([]rune(sc)), y, sc, id)
 	cv.put(cardW+x-1, y, '│', stFaint)
 }
 
@@ -444,12 +452,4 @@ func fitLeft(s string, w int) string {
 		return string(r[:w])
 	}
 	return s + strings.Repeat(" ", w-len(r))
-}
-
-func fitRight(s string, w int) string {
-	r := []rune(s)
-	if len(r) >= w {
-		return string(r[:w])
-	}
-	return strings.Repeat(" ", w-len(r)) + s
 }

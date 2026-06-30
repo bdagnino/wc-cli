@@ -32,6 +32,17 @@ type Match struct {
 	HomeScore int
 	AwayScore int
 
+	// Winner is "home", "away", or "" — the decided winner of a finished
+	// match, taken straight from the source so a penalty-shootout result is
+	// honoured, not just the regulation score. Empty for draws, unfinished, or
+	// group matches that ended level.
+	Winner string
+	// Shootout is set when the match was settled on penalties; HomeShootout
+	// and AwayShootout then carry the shootout tally.
+	Shootout     bool
+	HomeShootout int
+	AwayShootout int
+
 	// Detail is the source's human label for the moment of the match,
 	// e.g. "Scheduled", "45'+2'", "HT", "FT". Used as-is for display.
 	Detail string

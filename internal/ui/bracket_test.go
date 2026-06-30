@@ -141,6 +141,28 @@ func TestBuildBracketRelinksFinishedFeeders(t *testing.T) {
 	}
 }
 
+func TestWonByHonoursShootout(t *testing.T) {
+	// 1-1 in regulation, away won on penalties: the flag, not the level score,
+	// decides the winner.
+	pens := &bMatch{state: provider.StateFinished, hScore: 1, aScore: 1, winner: "away", shootout: true, hPen: 3, aPen: 4}
+	if pens.wonBy(true) {
+		t.Fatal("home lost the shootout but was marked the winner")
+	}
+	if !pens.wonBy(false) {
+		t.Fatal("away won the shootout but was not marked the winner")
+	}
+	// No winner flag: fall back to the regulation score.
+	reg := &bMatch{state: provider.StateFinished, hScore: 2, aScore: 1}
+	if !reg.wonBy(true) || reg.wonBy(false) {
+		t.Fatal("regulation winner-by-score fallback is broken")
+	}
+	// Before full time nobody has won, regardless of the running score.
+	live := &bMatch{state: provider.StateLive, hScore: 1, aScore: 0}
+	if live.wonBy(true) || live.wonBy(false) {
+		t.Fatal("a match in progress should have no winner yet")
+	}
+}
+
 // projectableBracket has a Round of 32 made entirely of group placeholders, in
 // both the "2A" short-code and "Group A Winner" name styles, so Project can be
 // exercised against both. Later rounds feed off match winners (TBD).
