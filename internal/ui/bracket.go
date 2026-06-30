@@ -164,11 +164,42 @@ func BuildBracket(ms []provider.Match) (b *Bracket, ok bool) {
 			m.lower = resolve(m.away)
 		}
 	}
+	// Once a feeder finishes, the source swaps its "Round of X N Winner"
+	// placeholder for the qualifier's real name, which severs the edge above and
+	// would orphan (and hide) the completed earlier-round match. Re-link by
+	// team: a real side in the Round of 16 or beyond is the winner of the single
+	// previous-round match that team played in.
+	for r := rR16; r < nRounds; r++ {
+		for _, m := range b.rounds[r] {
+			if m.upper == nil && m.home.real {
+				m.upper = b.feederByTeam(r-1, m.home.abbr)
+			}
+			if m.lower == nil && m.away.real {
+				m.lower = b.feederByTeam(r-1, m.away.abbr)
+			}
+		}
+	}
 	if len(b.rounds[rFinal]) == 1 && len(b.rounds[rR32]) > 0 {
 		b.final = b.rounds[rFinal][0]
 		return b, true
 	}
 	return b, false
+}
+
+// feederByTeam returns the match in round r that the given team played in,
+// matching either side by abbreviation. Teams are unique across a round, so the
+// match is unambiguous; used to re-attach a finished feeder to the slot its
+// winner now occupies.
+func (b *Bracket) feederByTeam(r bRound, abbr string) *bMatch {
+	if abbr == "" || r < 0 {
+		return nil
+	}
+	for _, m := range b.rounds[r] {
+		if strings.EqualFold(m.home.abbr, abbr) || strings.EqualFold(m.away.abbr, abbr) {
+			return m
+		}
+	}
+	return nil
 }
 
 // IDs are numeric strings; sort.SliceStable on kick handles ordering, but keep a

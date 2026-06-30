@@ -106,6 +106,41 @@ func TestBuildBracketOrdersByMatchNumber(t *testing.T) {
 	}
 }
 
+// When a Round of 32 match finishes, the source fills the Round of 16 slot with
+// the real winner rather than a "Round of 32 N Winner" placeholder, which
+// severs the tree edge. The completed match must be re-linked (by team), not
+// orphaned and hidden.
+func TestBuildBracketRelinksFinishedFeeders(t *testing.T) {
+	tm := func(d int) time.Time { return time.Date(2026, 7, d, 12, 0, 0, 0, time.UTC) }
+	finished := func(m provider.Match, hs, as int) provider.Match {
+		m.State = provider.StateFinished
+		m.HomeScore, m.AwayScore = hs, as
+		return m
+	}
+	ms := []provider.Match{
+		// R32 #1 is over (ARG beat BRA); R32 #2 hasn't kicked off.
+		finished(km("100", "Round of 32", "ARG", "Argentina", "BRA", "Brazil", tm(6)), 2, 1),
+		km("101", "Round of 32", "ESP", "Spain", "FRA", "France", tm(7)),
+		// R16 #1: ARG already penciled in by the source; the other side is still
+		// a placeholder pointing at R32 #2.
+		km("200", "Round of 16", "ARG", "Argentina", "", "Round of 32 2 Winner", tm(12)),
+		km("300", "Final", "", "Round of 16 1 Winner", "", "Round of 16 2 Winner", tm(15)),
+	}
+	b, ok := BuildBracket(ms)
+	if !ok {
+		t.Fatal("BuildBracket reported the tree is not formed")
+	}
+	r16 := b.rounds[rR16][0]
+	// The finished feeder (ARG vs BRA) must be re-attached as the upper edge...
+	if r16.upper != b.rounds[rR32][0] {
+		t.Fatal("finished feeder was not re-linked to the Round of 16 slot it produced")
+	}
+	// ...while the still-pending side resolves through its placeholder.
+	if r16.lower != b.rounds[rR32][1] {
+		t.Fatal("placeholder feeder did not resolve to R32 #2")
+	}
+}
+
 // projectableBracket has a Round of 32 made entirely of group placeholders, in
 // both the "2A" short-code and "Group A Winner" name styles, so Project can be
 // exercised against both. Later rounds feed off match winners (TBD).
