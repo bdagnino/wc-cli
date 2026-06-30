@@ -208,6 +208,30 @@ func TestEventKind(t *testing.T) {
 	}
 }
 
+func TestClampGroup(t *testing.T) {
+	// Knockout rounds drop the group letter (teams keep their group membership
+	// after the group stage, which would otherwise mislabel the fixture).
+	for _, round := range []string{"Round of 32", "Round of 16", "Quarterfinals", "Final"} {
+		m := provider.Match{Round: round, Group: "E"}
+		clampGroup(&m)
+		if m.Group != "" {
+			t.Errorf("%s: group = %q, want cleared", round, m.Group)
+		}
+	}
+	// Group-stage matches keep their group.
+	gs := provider.Match{Round: "Group Stage", Group: "E"}
+	clampGroup(&gs)
+	if gs.Group != "E" {
+		t.Errorf("group stage: group = %q, want E", gs.Group)
+	}
+	// An unknown (empty) round degrades to keeping the group rather than nothing.
+	unknown := provider.Match{Round: "", Group: "E"}
+	clampGroup(&unknown)
+	if unknown.Group != "E" {
+		t.Errorf("empty round: group = %q, want E preserved", unknown.Group)
+	}
+}
+
 const scoreboardFixture = `{
   "leagues":[{"season":{"type":{"name":"Group Stage"}}}],
   "events":[

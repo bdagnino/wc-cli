@@ -83,6 +83,7 @@ func (c *Client) Scoreboard(ctx context.Context, day time.Time) ([]provider.Matc
 	matches := make([]provider.Match, 0, len(raw.Events))
 	for _, e := range raw.Events {
 		if m, ok := toMatch(e, raw.round(), groups); ok {
+			clampGroup(&m)
 			matches = append(matches, m)
 		}
 	}
@@ -113,6 +114,7 @@ func (c *Client) Schedule(ctx context.Context) ([]provider.Match, error) {
 		if r := resolver(m.Kick); r != "" {
 			m.Round = r
 		}
+		clampGroup(&m)
 		all = append(all, m)
 	}
 	sort.Slice(all, func(i, j int) bool { return all[i].Kick.Before(all[j].Kick) })
@@ -462,6 +464,21 @@ func derefInt(p *int) int {
 		return 0
 	}
 	return *p
+}
+
+// clampGroup drops the group letter from a knockout match. The group label is
+// derived from the teams' group membership, which stays set after the group
+// stage — so without this a Round-of-32 fixture would mislabel itself as a
+// group game. Left untouched when the round is unknown (empty) so a failed
+// round lookup degrades to showing the group rather than nothing.
+func clampGroup(m *provider.Match) {
+	if m.Round != "" && !isGroupStage(m.Round) {
+		m.Group = ""
+	}
+}
+
+func isGroupStage(round string) bool {
+	return strings.Contains(strings.ToLower(round), "group")
 }
 
 func toState(s string) provider.MatchState {
